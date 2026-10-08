@@ -42,3 +42,20 @@ Watch the Sandstorm Taskbar Toggle Video (Click Image to view)
 Joanna Wick's Sandstorm Website (Click image to go to website)
 
 [![Joanna Wick's Sandstorm Website](http://sandstorm.dworks.work/images/banner3.jpg)](https://sandstorm.dworks.work)
+
+
+
+
+Change Log
+==========
+
+1.0 (TBD) Initial Release
+
+    1. Initial Release
+
+To Do
+=====
+
+    1. [CHANGE] Single Server Install that all servers use as the code base instead of a full install for each server.
+
+
