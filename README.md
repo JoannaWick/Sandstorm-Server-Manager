@@ -27,7 +27,7 @@ Watch the Sandstorm Manager Other Selections Video (Click Image to view)
 
 Watch the Update Sandstorm Base Server Files Video (Click Image to view)
 
-[![Watch the Update Sandstorm Base Server Files Video](https://img.youtube.com/vi/hau98xyawX4&t/0.jpg)](https://www.youtube.com/watch?v=hau98xyawX4&t)
+[![Watch the Update Sandstorm Base Server Files Video](https://img.youtube.com/vi/hau98xyawX4/0.jpg)](https://www.youtube.com/watch?v=hau98xyawX4)
 
 Watch the Sandstorm Server Reboot Countdown Video (Click Image to view)
 
