@@ -1,0 +1,15 @@
+{
+    "FirstRun":  "1",
+    "Port":  "0",
+    "QueryPort":  "0",
+    "Password":  "",
+    "RconListenPort":  "0",
+    "RconPassword":  "",
+    "SecurityCode":  "none",
+    "HostName":  "",
+    "MaxPlayers":  "12",
+    "GameStatsToken":  "",
+    "GSLTToken":  "",
+    "Mutators":  "",
+    "startscenario":  "farmhouse?Scenario=Scenario_Farmhouse_Checkpoint_Security"
+}

@@ -1,63 +1,80 @@
-# Sandstorm-Server-Manager
+# Sandstorm Server Manager
 ## Created for Insurgency Sandstorm 1.21 by Joanna Wick
-### Version: 1.0.0
-### Date: (TBD)
+### Version: 0.0.1
+### Date: 2026-07-25
 
-You can Ctrl+Click or Cmd+Click to open video in a new tab
+This package can Install/Add one or more Insurgency Sandstorm Server without the need to use Virtual Machines. It will keep mods updated, monitor players and restart downed servers automatically.
 
-Watch the Sandstorm Server Manager First Run Video (Click Image to view)
+This project utilizes **LiteDB**, an embedded NoSQL document store for .NET.
 
-[![Watch the Sandstorm Server Manager First Run Video](https://img.youtube.com/vi/xYBcZUzaKzs/0.jpg)](https://www.youtube.com/watch?v=xYBcZUzaKzs)
+* **Project Homepage:** [litedb.org](https://www.litedb.org/)
+* **Source Code:** [GitHub - litedb-org/LiteDB](https://github.com/litedb-org/LiteDB)
+* **License:** [MIT License](https://github.com)
 
-Watch the Sandstorm Manager Install New Server Video (Click Image to view)
+This project utilizes **System.Buffers (4.6.1)**, a performance-critical resource pooling library provided by Microsoft.
 
-[![Watch the Sandstorm Manager Install New Server Video](https://img.youtube.com/vi/Ub1nKeVgjBg/0.jpg)](https://www.youtube.com/watch?v=Ub1nKeVgjBg)
+* **Project Homepage:** [NuGet Gallery | System.Buffers](https://www.nuget.org/packages/System.Buffers/ "System.Buffers NuGet")
+* **Source Code:** [GitHub - dotnet/maintenance-packages](https://github.com/dotnet/maintenance-packages "System.Buffers Source Code")
+* **License:** [MIT License](https://github.com "Microsoft Maintenance Packages License")
 
-Watch theSandstorm Manager Import Existing Server (Click Image to view)
+This project utilizes **LiteDB.Studio**, the official graphical user interface tool for viewing and editing LiteDB v5 databases.
 
-[![Watch the Sandstorm Manager Import Existing Server Video](https://img.youtube.com/vi/N59Fhv_-2Ks/0.jpg)](https://www.youtube.com/watch?v=N59Fhv_-2Ks)
+* **Project Homepage:** [litedb.org](https://www.litedb.org/ "LiteDB Homepage")
+* **Source Code:** [GitHub - litedb-org/LiteDB.Studio](https://github.com/litedb-org/LiteDB.Studio "LiteDB.Studio GitHub Repo")
+* **License:** [MIT License](https://github.com "LiteDB.Studio License")
 
-Watch the Sandstorm Taskbar Video (Click Image to view)
+### 📦 Third-Party Redistributables
+This release package includes the following third-party prerequisite installers to ensure runtime compatibility:
 
-[![Watch the Sandstorm Taskbar Video](https://img.youtube.com/vi/rs4zWuSRro8/0.jpg)](https://www.youtube.com/watch?v=rs4zWuSRro8)
+* **Prerequisite:** UE4PrereqSetup_x64.exe (Unreal Engine 4 Prerequisites)
+* **Copyright Holder:** © Epic Games, Inc.
+* **Licensing:** Distributed under the terms of the Epic Games Unreal Engine End User License Agreement (EULA). 
+* **Purpose:** Deploys underlying engine runtime components (such as Microsoft Visual C++ redistributables and DirectX dependencies).
 
-Watch the Sandstorm Manager Other Selections Video (Click Image to view)
-
-[![Watch the Sandstorm Manager Other Selections Video](https://img.youtube.com/vi/rDycwelK0tw/0.jpg)](https://www.youtube.com/watch?v=rDycwelK0tw)
-
-Watch the Update Sandstorm Base Server Files Video (Click Image to view)
-
-[![Watch the Update Sandstorm Base Server Files Video](https://img.youtube.com/vi/hau98xyawX4/0.jpg)](https://www.youtube.com/watch?v=hau98xyawX4)
-
-Watch the Sandstorm Server Reboot Countdown Video (Click Image to view)
-
-[![Watch the Sandstorm Server Reboot Countdown Video](https://img.youtube.com/vi/scxf6CNCILM/0.jpg)](https://www.youtube.com/watch?v=scxf6CNCILM)
-
-Watch the Sandstorm Download Progress Bar Video (Click Image to view)
-
-[![Watch the Sandstorm Download Progress Bar Video](https://img.youtube.com/vi/JNZ5WfJ0BCU/0.jpg)](https://www.youtube.com/watch?v=JNZ5WfJ0BCU)
-
-Watch the Sandstorm Taskbar Toggle Video (Click Image to view)
-
-[![Watch the Sandstorm Taskbar Toggle Video](https://img.youtube.com/vi/NYzJWfBCPtw/0.jpg)](https://www.youtube.com/watch?v=NYzJWfBCPtw)
-
-Joanna Wick's Sandstorm Website (Click image to go to website)
-
-[![Joanna Wick's Sandstorm Website](http://sandstorm.dworks.work/images/banner3.jpg)](https://sandstorm.dworks.work)
+## Detailed Overview
 
 
 
+## Installation & Setup
+
+Provide step-by-step instructions on how to install and run your distribution.
+
+1. Download the latest release from the [Releases](link-to-releases) page.
+2. Extract the files to your desired location.
+3. Run Start_Manage_Multi_Server.bat to install a New Server or Add an Existing Server
+4. Once your server(s) are setup Run Start_Multi_Server_Launcher.bat to start and monitor all of your Sandstorm Servers.
+
+### If you see the following message when you run the script enter A or Y.
+
+> Execution Policy Change
+
+> The execution policy helps protect you from scripts that you do not trust. Changing the execution policy might expose
+> you to the security risks described in the about_Execution_Policies help topic at
+
+> http://go.microsoft.com/fwlink/?LinkID=135170. Do you want to change the execution policy?
+
+> [Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "N"):
+
+## Credits & Acknowledgements
+
+* **[Your Name/Studio]** - Creator and developer of this project.
+* This software uses components from **Unreal Engine** (© Epic Games, Inc.). 
+* `UE4PrereqSetup_x64.exe` is a prerequisite installer provided by Epic Games, Inc. to configure required system runtimes. Learn more at [unrealengine.com](https://unrealengine.com).
+
+## License
+
+State your project's license here (e.g., MIT, GPL, or Proprietary/All Rights Reserved). 
+
+*Note: The included Epic Games prerequisites remain subject to the Unreal Engine End User License Agreement (EULA).*
 
 Change Log
 ==========
 
-1.0 (TBD) Initial Release
+1.0.0 (2026-??-??)
 
-    1. Initial Release
+    1. Initial Release 
 
 To Do
 =====
 
-    1. [CHANGE] Single Server Install that all servers use as the code base instead of a full install for each server.
-
-
+    1. Nothing at this time
