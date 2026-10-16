@@ -1,7 +1,7 @@
 # Sandstorm Server Manager
 ## Created for Insurgency Sandstorm 1.21 by Joanna Wick
-### Version: 0.0.1
-### Date: 2026-07-25
+### Version: 1.0.0
+### Date: 2026-10-16
 
 This package can Install/Add one or more Insurgency Sandstorm Server without the need to use Virtual Machines. It will keep mods updated, monitor players and restart downed servers automatically.
 
@@ -23,13 +23,49 @@ This project utilizes **LiteDB.Studio**, the official graphical user interface t
 * **Source Code:** [GitHub - litedb-org/LiteDB.Studio](https://github.com/litedb-org/LiteDB.Studio "LiteDB.Studio GitHub Repo")
 * **License:** [MIT License](https://github.com "LiteDB.Studio License")
 
-### 📦 Third-Party Redistributables
-This release package includes the following third-party prerequisite installers to ensure runtime compatibility:
+## These videos are out of date but will give you an idea how to use this software until I can create new videos.  There have been a number of additions since these videos were made like a Unified Mod Directory where all mods for all servers are stored, one server software install used by all servers, disabling install servers and restoring user.json backups for each server.
 
-* **Prerequisite:** UE4PrereqSetup_x64.exe (Unreal Engine 4 Prerequisites)
-* **Copyright Holder:** © Epic Games, Inc.
-* **Licensing:** Distributed under the terms of the Epic Games Unreal Engine End User License Agreement (EULA). 
-* **Purpose:** Deploys underlying engine runtime components (such as Microsoft Visual C++ redistributables and DirectX dependencies).
+You can Ctrl+Click or Cmd+Click to open video in a new tab
+
+Watch the Sandstorm Server Manager First Run Video (Click Image to view)
+
+[![Watch the Sandstorm Server Manager First Run Video](https://img.youtube.com/vi/xYBcZUzaKzs/0.jpg)](https://www.youtube.com/watch?v=xYBcZUzaKzs)
+
+Watch the Sandstorm Manager Install New Server Video (Click Image to view)
+
+[![Watch the Sandstorm Manager Install New Server Video](https://img.youtube.com/vi/Ub1nKeVgjBg/0.jpg)](https://www.youtube.com/watch?v=Ub1nKeVgjBg)
+
+Watch theSandstorm Manager Import Existing Server (Click Image to view)
+
+[![Watch the Sandstorm Manager Import Existing Server Video](https://img.youtube.com/vi/N59Fhv_-2Ks/0.jpg)](https://www.youtube.com/watch?v=N59Fhv_-2Ks)
+
+Watch the Sandstorm Taskbar Video (Click Image to view)
+
+[![Watch the Sandstorm Taskbar Video](https://img.youtube.com/vi/rs4zWuSRro8/0.jpg)](https://www.youtube.com/watch?v=rs4zWuSRro8)
+
+Watch the Sandstorm Manager Other Selections Video (Click Image to view)
+
+[![Watch the Sandstorm Manager Other Selections Video](https://img.youtube.com/vi/rDycwelK0tw/0.jpg)](https://www.youtube.com/watch?v=rDycwelK0tw)
+
+Watch the Update Sandstorm Base Server Files Video (Click Image to view)
+
+[![Watch the Update Sandstorm Base Server Files Video](https://img.youtube.com/vi/hau98xyawX4&t/0.jpg)](https://www.youtube.com/watch?v=hau98xyawX4&t)
+
+Watch the Sandstorm Server Reboot Countdown Video (Click Image to view)
+
+[![Watch the Sandstorm Server Reboot Countdown Video](https://img.youtube.com/vi/scxf6CNCILM/0.jpg)](https://www.youtube.com/watch?v=scxf6CNCILM)
+
+Watch the Sandstorm Download Progress Bar Video (Click Image to view)
+
+[![Watch the Sandstorm Download Progress Bar Video](https://img.youtube.com/vi/JNZ5WfJ0BCU/0.jpg)](https://www.youtube.com/watch?v=JNZ5WfJ0BCU)
+
+Watch the Sandstorm Taskbar Toggle Video (Click Image to view)
+
+[![Watch the Sandstorm Taskbar Toggle Video](https://img.youtube.com/vi/NYzJWfBCPtw/0.jpg)](https://www.youtube.com/watch?v=NYzJWfBCPtw)
+
+Joanna Wick's Sandstorm Website (Click image to go to website)
+
+[![Joanna Wick's Sandstorm Website](http://sandstorm.dworks.work/images/banner3.jpg)](https://sandstorm.dworks.work)
 
 ## Detailed Overview
 
@@ -55,26 +91,16 @@ Provide step-by-step instructions on how to install and run your distribution.
 
 > [Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "N"):
 
-## Credits & Acknowledgements
-
-* **[Your Name/Studio]** - Creator and developer of this project.
-* This software uses components from **Unreal Engine** (© Epic Games, Inc.). 
-* `UE4PrereqSetup_x64.exe` is a prerequisite installer provided by Epic Games, Inc. to configure required system runtimes. Learn more at [unrealengine.com](https://unrealengine.com).
-
-## License
-
-State your project's license here (e.g., MIT, GPL, or Proprietary/All Rights Reserved). 
-
-*Note: The included Epic Games prerequisites remain subject to the Unreal Engine End User License Agreement (EULA).*
-
 Change Log
 ==========
 
-1.0.0 (2026-??-??)
+1.0.0 (2026-10-16)
 
     1. Initial Release 
 
 To Do
 =====
 
-    1. Nothing at this time
+    1. Add Reboot Counter for each Server.  If a server reboots X number of times within 10 minutes the server is DISABLED
+       to prevent boot looping until the Admin can resolve the issue.
+       
