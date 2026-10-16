@@ -23,7 +23,7 @@ This project utilizes **LiteDB.Studio**, the official graphical user interface t
 * **Source Code:** [GitHub - litedb-org/LiteDB.Studio](https://github.com/litedb-org/LiteDB.Studio "LiteDB.Studio GitHub Repo")
 * **License:** [MIT License](https://github.com "LiteDB.Studio License")
 
-## These videos are out of date but will give you an idea how to use this software until I can create new videos.  There have been a number of additions since these videos were made like a Unified Mod Directory where all mods for all servers are stored, one server software install used by all servers, disabling install servers and restoring user.json backups for each server.
+### These videos are out of date but will give you an idea how to use this software until I can create new videos.  There have been a number of additions since these videos were made like a Unified Mod Directory where all mods for all servers are stored, one server software install used by all servers, disabling install servers and restoring user.json backups for each server.
 
 You can Ctrl+Click or Cmd+Click to open video in a new tab
 
