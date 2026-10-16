@@ -21,6 +21,7 @@ foreach ($item in $ServerListData)
             $logPath = Join-Path -Path $PSScriptRoot -ChildPath "InsurgencySandstorm\steamapps\common\sandstorm_server\Insurgency\Saved\Logs\$Server_ID.log"
             $configPath = Join-Path -Path $PSScriptRoot -ChildPath "config\ServerData\$Server_ID\ServerStartup.json"
             $configData = Get-Content -Path $configPath -Raw | ConvertFrom-Json
+            $serverPath = Join-Path -Path $PSScriptRoot -ChildPath "config\ServerData\$Server_ID\server"
 
             $ServerList += [PSCustomObject]@{ Name = $configData.HostName; IP = "127.0.0.1"; RconPort = $configData.RconListenPort; Pass = $configData.RconPassword; Path = $serverPath }
         }
@@ -221,7 +222,7 @@ Function global:parse-RconResponse {
 
         $global:OutputBox.AppendText("[$LogTime] List Server Maps matching: $mapSearch`n")
 
-        $serverConfigDir = Join-Path -Path $global:Path -ChildPath "Insurgency\Config\server"
+        $serverConfigDir = $global:Path
 
         if (Test-Path (Join-Path $serverConfigDir "mapcycle.txt")) {
             $mapCyclePath = Join-Path $serverConfigDir "mapcycle.txt"
@@ -265,7 +266,7 @@ Function global:parse-RconResponse {
 
         $global:OutputBox.AppendText("[$LogTime] List of Server Scenarios matching: $mapSearch`n")
 
-        $serverConfigDir = Join-Path -Path $global:Path -ChildPath "Insurgency\Config\server"
+        $serverConfigDir = $global:Path
 
         if (Test-Path (Join-Path $serverConfigDir "mapcycle.txt")) {
             $mapCyclePath = Join-Path $serverConfigDir "mapcycle.txt"
@@ -473,7 +474,7 @@ function Show-TravelGUI
     $scenItemStyle.Setters.Add([System.Windows.Setter]::new([System.Windows.Controls.ComboBoxItem]::BackgroundProperty, [System.Windows.Media.Brushes]::White))
     $cmbScenario.ItemContainerStyle = $scenItemStyle
 
-    $serverConfigDir = Join-Path -Path $global:Path -ChildPath "Insurgency\Config\server"
+    $serverConfigDir = $global:Path
 
     if (Test-Path (Join-Path $serverConfigDir "mapcycle.txt")) {
         $mapCyclePath = Join-Path $serverConfigDir "mapcycle.txt"
@@ -907,7 +908,7 @@ $ServerDropdown.Add_SelectionChanged({
         $LogTime = (Get-Date).ToString("HH:mm:ss")
         $global:OutputBox.AppendText("[$LogTime] Switched Target Host -> $($SelectedServer.Name) ($($global:RconIP):$($global:RconPort))`n`n")
 
-        $mapCyclePath = Join-Path -Path $global:Path -ChildPath "Insurgency\Config\server\mapcycle.txt"
+        $mapCyclePath = Join-Path -Path $global:Path -ChildPath "mapcycle.txt"
         $mapCycle = @(Get-Content $mapCyclePath) -split "`r?`n"
 
         $uniqueScenarios = $(foreach ($line in $mapCycle) {
