@@ -69,16 +69,36 @@ Joanna Wick's Sandstorm Website (Click image to go to website)
 
 ## Detailed Overview
 
+Bullet Points for Sandstorm Server Manager (more detailed information later)
 
+1. Install Multiple Sandstorm Servers on a single computer without needing to use Virtual Machine Software.  You can have as many servers installed and managed by this software as you have drive space and CPU ability.
+2. Unified Mod Storage shared by all servers.  Instead of having a mod storage directory for each server there is not a single location.  Servers that use the same mods will now share the mods stored in that single location.  The mod doesn't have to be downloaded for each server that uses it.  This saves on drive storage a premium on a Remote Host.  My 4 servers went from 312GB to 134GB for mod storage.
+3. Single Sandstorm Server install used by all servers in the Sandstorm Manager.  You will save 5GB of storage for each added server over the first one.  Instead of 20GB for 4 servers you still only use 5GB of storage for all 4.
+4. First execution of Sandstorm Manager will automatically check to see if UE4 Prerequisites and required .NET files are installed.  If not the UE4 Prerequisites will be installed from the initial Sandstorm Server download.  The .NET files will be downloaded from Microsoft and installed.  **IMPORTANT: The 2.0 and 3.5 .NET files from Microsoft can take more than 10 minutes to download.  It can look like it is hung but it is not.
+5. Installing a New Server is easy and fairly painless as you are taken through each step required and you are allowed to edit all .ini/.txt files during the process.  The initial server uses a default Game.ini and you should modify it to fit your needs.  You will be taken through the Configuration progress to finish setting up your server.
+6. Importing an Existing Server is just as easy.  You will be ask to find the location of the InsurgencyServer.exe using a File GUI.  Once located the admin.txt, mapcycle.txt, motd.txt, Game.ini and Engin.ini will be copied to the Server Manager.  The you will be asked to locate the user.json file using a File GUI.  When located it will be copied to the Server Manager.  When this is copied you will not need to request a new Security Code from mod.io.  Next you will be asked to locate the state.json which will let the Sandstorm Manager know where you mods are located.  You mods will be copied to the UnifiedMods directory so they will not be downloaded again.  You will be taken through the Configuration progress to finish setting up your server.
+7. The TCP/UDP Ports will be opened for each server during installation or importation.  You can change those ports at any time using the Sandstorm Manager and when changed they will be automatically opened for you.
+8. You can Remove any server from the Server List.  This will not delete the server or mods but only the entry in the Server List.
+9. You can ENABLE or DISABLE any installed server.  If you have a server causing problems, wanting to work on it or just want it off you can easily DISABLE it.  When the Server Launcher is started you will be notified of any DISABLED servers before launching any others.
+10. Unsubscribing server mods is easy in the Server Manager.  Just select your server and all Subscribed mods will be shown.  Select any mods you would like to unsubcribe.  You will be given a change to abort after selecting.  If the mods you are unsubscribing are not being used by any other Server they will be deleted from the UnifiedMods directory freeing space.
+11. If one of your servers refuses to connect to mod.io your user.json might be corrupted.  There are 11 backup user.json files you can pick from to restore and possible get your server up without requesting a new Security Code.
+12. No need to use Windows Task Scheduler to reboot your servers on a regular basis.  You can now set as many Reboot Times as you would like and all servers will be rebooted at that time without having to reboot the computer itself.  **IMPORTANT:  You should have one reboot scheduled every day.  During reboot the Sandstorm Server software updated if needed and any mods will automatically be updated before launching each server.  All players on all servers will be sent Chat Messages starting 5 minutes before reboot every 30 seconds letting them know mow much time is left before reboot.
+13. Server Analytics is included that tracks all players on every server showing when they joined, total play time, how many times they have joined for each server.  Also, each server will show graphs of total unique players per hour and per day.  You can even look at past histories of hourly and daily unique players.
+14. Master Rcon Dashboard is included and all commands are supported and you can easily switch from server to server using a dropdown menu.
+15. Included is a dynamically updated Server Dashboard that shows each server.  Each server will display Server Name, Current Map, Player Count/Max Players and all players on the server (Name, ID, IP Address and Score).  The window will stay the same size but the information inside the window will dynamically resize so everything fits without a scroll bar.
+16. If any server crashes it will automatically restart so you do not have to be around to restart the server.
+17. A Sandstorm Taskbar is included that will allow you to easily reboot a server or call up other items like RCon Dashboard and Sever Analytics.  You can set the Sandstorm Taskbar to minimize to a button after all servers have started.
+
+That is a quick overview of what is included.  
 
 ## Installation & Setup
 
 Provide step-by-step instructions on how to install and run your distribution.
 
-1. Download the latest release from the [Releases](link-to-releases) page.
+1. Download the latest release from the [Mod.io]([link-to-releases](https://mod.io/g/insurgencysandstorm/m/sandstorm-server-manager#description)) page.
 2. Extract the files to your desired location.
-3. Run Start_Manage_Multi_Server.bat to install a New Server or Add an Existing Server
-4. Once your server(s) are setup Run Start_Multi_Server_Launcher.bat to start and monitor all of your Sandstorm Servers.
+3. Run Start_Server_Manager.bat to install a New Server or Add an Existing Server
+4. Once your server(s) are setup Run Start_Server_Launcher.bat to start and monitor all of your Sandstorm Servers.
 
 ### If you see the following message when you run the script enter A or Y.
 
