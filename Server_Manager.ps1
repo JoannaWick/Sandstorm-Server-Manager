@@ -3784,7 +3784,7 @@ if ($ManagerConfig.isFirstRun -eq 0)
 
 do {
     Show-Menu
-    $selection = Read-Host -Prompt " Please enter your selection (1-7)"
+    $selection = Read-Host -Prompt " Please enter your selection (1-9)"
     
     switch ($selection) {
         '1' {
