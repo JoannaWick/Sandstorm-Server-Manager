@@ -3470,6 +3470,7 @@ function Show-Menu {
     {
         $infoText = "Minimize Sandstorm Taskbar"
     }
+    Write-Host "       Current Setting: $infoText" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host ""
