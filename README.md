@@ -96,7 +96,7 @@ That is a quick overview of what is included.
 Provide step-by-step instructions on how to install and run your distribution.
 
 1. Download the latest release from the [Mod.io]([link-to-releases](https://mod.io/g/insurgencysandstorm/m/sandstorm-server-manager#description)) page.
-2. Extract the files to your desired location.
+2. Extract the files to your desired location where you want all servers and mods to be stored.
 3. Run Start_Server_Manager.bat to install a New Server or Add an Existing Server
 4. Once your server(s) are setup Run Start_Server_Launcher.bat to start and monitor all of your Sandstorm Servers.
 
