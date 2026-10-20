@@ -126,6 +126,7 @@ Change Log
     8. [ADDED] Server Launcher: Added check for "Warning: OSS: Async task 'FOnlineAsyncTaskSteamCreateServer bWasSuccessful: 0' failed" which signals server boot failure if in the last 20 lines of the log.
     9. [CHANGED] Server Launcher: Changed check for running servers to determine if not running then launch server.
    10. [CHANGED] Info Monitor: Changed the loop structure used by the Info Monitor to scan through server logs for player connects and disconnects.  The old method could drop lines from the stream.
+
 1.0.0 (2026-10-16)
 
     1. Initial Release 
