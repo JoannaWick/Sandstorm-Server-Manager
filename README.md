@@ -116,17 +116,16 @@ Change Log
 
 1.1.0 (2026-10-20)
 
-    1. [CHANGED] Mod Updater: The Download Progress Code has been re-written.  Some people were experiencing red errors being displayed slowing down downloads.  This should fix those errors.
-    2. [ADDED] Mod Updater: When mode has been unsubscribed it will delete the mod if none of the other servers are subscribed freeing drive space.
-    3. [FIXED] Mod Updater: If multiple servers were subscribed to the same mod only one will download and install it to the UnifideMods directory.
-    4. [ADDED] Taskbar: Disable Server Button will kill a currently running server and then set it to Disabled so it will not start next reboot.
-    5. [ADDED] When updating with a new version of Server Manager the startSandstormServer.bat will be copied to the Insurgency\steamapps\common\sandstorm_server directory overwriting the older version if new.  Updating to the latest version is easy.  Just copy the Sandstorm_Server_Manager to the existing directory overwritting everything in there.  None of the server configurations or mods will be changed.
-    6. [CHANGED] Info Monitor: Moved Log Stream Parsing after Rcon processing to try and prevent players that have logged out from staying in the Server Dashboard display.
-    7. [ADDED] Server Launcher: If a server reboots more than 4 times without being successful the server will be DISABLED to prevent further boot looping until the admin can investigate
-    8. Server Launcher: Added check for "Warning: OSS: Async task 'FOnlineAsyncTaskSteamCreateServer bWasSuccessful: 0' failed" which signals server boot failure if in the las 20 lines of the log.
-    9. [CHANGED] Server Launcher: Changed check for running servers to determine if not running then launch server.
-   10. [CHANGED] Info Monitor: Changed the loop structure used by the Info Monitor to scan through server logs for player connects and disconnects.  The old method could drop lines from the stream.
-
+    1. [CHANGED] Mod Updater: The Download Progress Code has been re-written.  Some people were experiencing red errors being displayed slowing down downloads.  This should fix those errors.
+    2. [ADDED] Mod Updater: When mod has been unsubscribed it will delete the mod if none of the other servers are subscribed freeing drive space.
+    3. [FIXED] Mod Updater: If multiple servers were subscribed to the same mod only one will download and install it to the UnifideMods directory.
+    4. [ADDED] Taskbar: Disable Server Button will kill a currently running server and then set it to Disabled so it will not start next reboot.
+    5. [ADDED] When updating with a new version of Server Manager the startSandstormServer.bat will be copied to the Insurgency\steamapps\common\sandstorm_server directory overwriting the older version if new.  Updating to the latest version is easy.  Just copy the Sandstorm_Server_Manager to the existing directory overwritting everything in there.  None of the server configurations or mods will be changed.
+    6. [CHANGED] Info Monitor: Moved Log Stream Parsing after Rcon processing to try and prevent players that have logged out from staying in the Server Dashboard display.
+    7. [ADDED] Server Launcher: If a server reboots more than 4 times without being successful the server will be DISABLED to prevent further boot looping until the admin can investigate
+    8. [ADDED] Server Launcher: Added check for "Warning: OSS: Async task 'FOnlineAsyncTaskSteamCreateServer bWasSuccessful: 0' failed" which signals server boot failure if in the last 20 lines of the log.
+    9. [CHANGED] Server Launcher: Changed check for running servers to determine if not running then launch server.
+   10. [CHANGED] Info Monitor: Changed the loop structure used by the Info Monitor to scan through server logs for player connects and disconnects.  The old method could drop lines from the stream.
 1.0.0 (2026-10-16)
 
     1. Initial Release 
