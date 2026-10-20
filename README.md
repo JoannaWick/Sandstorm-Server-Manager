@@ -116,7 +116,7 @@ Change Log
 
 1.1.0 (2026-10-20)
 
-    1. [CHANGED] Mod Updater: The Download Progress Code has been re-written.  Some people were experiencing red errors being displayed slowing down downloads.  This should fix those errors.
+    1. CHANGED Mod Updater: The Download Progress Code has been re-written.  Some people were experiencing red errors being displayed slowing down downloads.  This should fix those errors.
     2. [ADDED] Mod Updater: When mod has been unsubscribed it will delete the mod if none of the other servers are subscribed freeing drive space.
     3. [FIXED] Mod Updater: If multiple servers were subscribed to the same mod only one will download and install it to the UnifideMods directory.
     4. [ADDED] Taskbar: Disable Server Button will kill a currently running server and then set it to Disabled so it will not start next reboot.
@@ -130,6 +130,7 @@ Change Log
 1.0.0 (2026-10-16)
 
     1. Initial Release 
+    
 
 To Do
 =====
