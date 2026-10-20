@@ -482,6 +482,7 @@ $itemsControl.ItemsSource = $data
 $ServerIdleTime = [ordered]@{ }
 $LiveConnections = @{}
 $PendingConnectionSig = @{}
+$DisconnectedPlayerList = @{}
 
 # Initial Connection Pass
 foreach ($Server in $Servers) { 
@@ -496,6 +497,7 @@ foreach ($Server in $Servers) {
     $data.Add($dataelement)
 
     $LiveConnections[$server.Name] = @{}
+    $DisconnectedPlayerList[$server.Name] = @{}
 
     Connect-Server -Server $Server
 }
@@ -599,131 +601,6 @@ try {
                 continue
             }
             
-            # Parse logins and log outs from Insurgency.log
-        
-            do {
-                $Line = $ServerLogs[$server.Name].StreamReader.ReadLine()
-
-                if ($null -ne $Line) {
-            
-                    # Check for Login request
-                    if ($line -match 'LogNet:\s*Login request:\s*\?Name=(?<Name>.*?)\s+userId:\s*(?<Id>.*?)\s+platform:') {
-                        $UserID = $Matches['Id'].Trim()
-                        $PlayerName = $Matches['Name'].Trim()
-                        $PlayerName = $PlayerName -replace '\?\?Password.*', ''
-
-                        # Clean any trailing punctuation from the network ID string
-                        $UserID = $UserID -replace '[,\}\]]', ''
-
-                        # 1. Isolate the text between '[' and the first ':'
-                        $start = $line.IndexOf('[') + 1
-                        $end   = $line.IndexOf(':')
-                        $CleanedString = $line.Substring($start, $end - $start) # "2026.08.31-01.07.49"
-
-                        # 2. Parse the string into a real DateTime object
-                        $DateTime = [datetime]::ParseExact($CleanedString, 'yyyy.MM.dd-HH.mm.ss', $null)
-
-                        # 2. Get the system's local time zone object
-                        $tz = Get-TimeZone
-
-                        # 3. Check if that specific date is in Daylight Saving Time
-                        $isDST = $tz.IsDaylightSavingTime($DateTime)
-
-                        # 4. Get the REAL offset for that specific date (accounts for DST)
-                        $currentOffset = $tz.GetUtcOffset($DateTime)
-
-                        # 5. Local Login Time
-                        $Timestamp = $DateTime.AddHours($currentOffset.Hours)
-
-                        $LiveConnections[$Server.Name][$UserID] = @{
-                            PlayerName = $PlayerName
-                            IP         = "0.0.0.0"
-                            Score      = 0
-                            LoginTime  = $Timestamp
-                        }
-                    }
-            
-                    # Check for UChannel Close and match Player ID.  Save player data to PlayerLogs DB
-                    elseif ($line -like '*LogNet: UChannel::Close:*') {
-                        # Extracts the UniqueId value
-                        if ($line -match 'RemoteAddr:\s*(?<RemoteAddr>[^,]+),.*?UniqueId:\s*(?<UniqueId>[^\s,]+)') {
-                            $RemoteAddr = ($Matches['RemoteAddr'].Trim() -split ':')[0]
-                            $UniqueId = $Matches['UniqueId'].Trim()
-
-                            # Clean off any potential trailing commas or formatting brackets
-                            $UniqueId = $UniqueId -replace '[,\}\]]', ''
-                                 
-                            if ($UniqueId -ne "INVALID")
-                            {
-#                                if ($LiveConnections[$Server.Name].Keys -contains $UniqueId) {
-                                    if ($LiveConnections -and 
-                                    $LiveConnections.ContainsKey($Server.Name) -and 
-                                    $LiveConnections[$Server.Name].ContainsKey($UniqueId)) {
-                                        $playerInformation = $LiveConnections[$Server.Name][$UniqueId]
-                                            
-                                        $CurrentTime = [DateTime]::Now
-                                        $PlayTime = $CurrentTime - $playerInformation.LoginTime
-                                        $DurationStr = "{0:d2}:{1:d2}:{2:d2}" -f [int]$PlayTime.TotalHours, $PlayTime.Minutes, $PlayTime.Seconds
-
-                                        $MatchEndedPayload = @{
-                                            NetworkID    = $UniqueId
-                                            Name         = $playerInformation.PlayerName
-                                            LastPlayed   = $playerInformation.LoginTime
-                                            Duration     = $DurationStr
-                                            LastServer   = $Info.ServerName
-                                            LastServerID = $Server.Name
-                                            Ip           = $RemoteAddr
-                                            Score        = $playerInformation.Score
-                                        }
-                                        $null = Add-PlayerSessionLog -Database $global:SandstormDB -SessionData $MatchEndedPayload
-
-                                        $LiveConnections[$Server.Name].Remove($UniqueId)
-                                    }
-#                                }
-                            }
-                        }
-                    }
-            
-                    # Check for UNetConnection Close and match Player ID.  Save player data to PlayerLogs DB
-                    elseif ($Line -match "LogNet: UNetConnection::Close:.*RemoteAddr:\s*(?:\[::ffff:)?(?<IPPort>[^,\]\s]+).*UniqueId:\s*(?<UID>\S+)") {
-                        $RemoteAddr = ($Matches['IPPort'].Trim() -split ':')[0]
-                        $UniqueId = $Matches['UID'].Trim()
-
-                        # Clean off any potential trailing commas or formatting brackets
-                        $UniqueId = $UniqueId -replace '[,\}\]]', ''
-                            
-                        if ($UniqueId -ne "INVALID")
-                        {
-#                            if ($LiveConnections[$Server.Name].Keys -contains $UniqueId) {
-                                if ($LiveConnections -and 
-                                    $LiveConnections.ContainsKey($Server.Name) -and 
-                                    $LiveConnections[$Server.Name].ContainsKey($UniqueId)) {
-                                    $playerInformation = $LiveConnections[$Server.Name][$UniqueId]
-
-                                    $CurrentTime = [DateTime]::Now
-                                    $PlayTime = $CurrentTime - $playerInformation.LoginTime
-                                    $DurationStr = "{0:d2}:{1:d2}:{2:d2}" -f [int]$PlayTime.TotalHours, $PlayTime.Minutes, $PlayTime.Seconds
-                                                
-                                    $MatchEndedPayload = @{
-                                        NetworkID    = $UniqueId
-                                        Name         = $playerInformation.PlayerName
-                                        LastPlayed   = $playerInformation.LoginTime
-                                        Duration     = $DurationStr
-                                        LastServer   = $Info.ServerName
-                                        LastServerID = $Server.Name
-                                        Ip           = $RemoteAddr
-                                        Score        = $playerInformation.Score
-                                    }
-                                    $null = Add-PlayerSessionLog -Database $global:SandstormDB -SessionData $MatchEndedPayload
-
-                                    $LiveConnections[$Server.Name].Remove($UniqueId)
-                                }
-#                            }
-                        }
-                    }
-                }
-            } while ($ServerLogs[$server.Name].StreamReader.Peek() -ge 0)
-
             $allPlayers = @()
             $playerCount = 0
             $CurrentTime = [DateTime]::Now
@@ -768,8 +645,8 @@ try {
                             $playerScore = $match.Groups['Score'].Value
 
                             if ($LiveConnections -and 
-                            $LiveConnections.ContainsKey($Server.Name) -and 
-                            $LiveConnections[$Server.Name].ContainsKey($UniqueId)) 
+                                $LiveConnections.ContainsKey($Server.Name) -and 
+                                $LiveConnections[$Server.Name].ContainsKey($UniqueId)) 
                             {
                                 if ($LiveConnections[$Server.Name][$UniqueId].IP -eq "0.0.0.0")
                                 {
@@ -834,6 +711,135 @@ try {
                 Write-Warning "[$($Server.Name)] RCON session dropped during command execution: $_"
                 Close-ServerConnection -Server $Server
             }
+
+            # Parse logins and log outs from Insurgency.log
+        
+#            do {
+#                $Line = $ServerLogs[$server.Name].StreamReader.ReadLine()
+            while (($Line = $ServerLogs[$server.Name].StreamReader.ReadLine()) -ne $null) 
+            {
+#                if ($null -ne $Line) {
+            
+                    # Check for Login request
+                    if ($line -match 'LogNet:\s*Login request:\s*\?Name=(?<Name>.*?)\s+userId:\s*(?<Id>.*?)\s+platform:') 
+                    {
+                        $UserID = $Matches['Id'].Trim()
+                        $PlayerName = $Matches['Name'].Trim()
+                        $PlayerName = $PlayerName -replace '\?\?Password.*', ''
+
+                        # Clean any trailing punctuation from the network ID string
+                        $UserID = $UserID -replace '[,\}\]]', ''
+
+                        # 1. Isolate the text between '[' and the first ':'
+                        $start = $line.IndexOf('[') + 1
+                        $end   = $line.IndexOf(':')
+                        $CleanedString = $line.Substring($start, $end - $start) # "2026.08.31-01.07.49"
+
+                        # 2. Parse the string into a real DateTime object
+                        $DateTime = [datetime]::ParseExact($CleanedString, 'yyyy.MM.dd-HH.mm.ss', $null)
+
+                        # 2. Get the system's local time zone object
+                        $tz = Get-TimeZone
+
+                        # 3. Check if that specific date is in Daylight Saving Time
+                        $isDST = $tz.IsDaylightSavingTime($DateTime)
+
+                        # 4. Get the REAL offset for that specific date (accounts for DST)
+                        $currentOffset = $tz.GetUtcOffset($DateTime)
+
+                        # 5. Local Login Time
+                        $Timestamp = $DateTime.AddHours($currentOffset.Hours)
+
+                        $LiveConnections[$Server.Name][$UserID] = @{
+                            PlayerName = $PlayerName
+                            IP         = "0.0.0.0"
+                            Score      = 0
+                            LoginTime  = $Timestamp
+                        }
+                    }
+            
+                    # Check for UChannel Close and match Player ID.  Save player data to PlayerLogs DB
+                    elseif ($line -like '*LogNet: UChannel::Close:*') {
+                        # Extracts the UniqueId value
+                        if ($line -match 'RemoteAddr:\s*(?<RemoteAddr>[^,]+),.*?UniqueId:\s*(?<UniqueId>[^\s,]+)') 
+                        {
+                            $RemoteAddr = ($Matches['RemoteAddr'].Trim() -split ':')[0]
+                            $UniqueId = $Matches['UniqueId'].Trim()
+
+                            # Clean off any potential trailing commas or formatting brackets
+                            $UniqueId = $UniqueId -replace '[,\}\]]', ''
+                                 
+                            if ($UniqueId -ne "INVALID")
+                            {
+#                                if ($LiveConnections[$Server.Name].Keys -contains $UniqueId) {
+                                    if ($LiveConnections -and 
+                                    $LiveConnections.ContainsKey($Server.Name) -and 
+                                    $LiveConnections[$Server.Name].ContainsKey($UniqueId)) {
+                                        $playerInformation = $LiveConnections[$Server.Name][$UniqueId]
+                                            
+                                        $CurrentTime = [DateTime]::Now
+                                        $PlayTime = $CurrentTime - $playerInformation.LoginTime
+                                        $DurationStr = "{0:d2}:{1:d2}:{2:d2}" -f [int]$PlayTime.TotalHours, $PlayTime.Minutes, $PlayTime.Seconds
+
+                                        $MatchEndedPayload = @{
+                                            NetworkID    = $UniqueId
+                                            Name         = $playerInformation.PlayerName
+                                            LastPlayed   = $playerInformation.LoginTime
+                                            Duration     = $DurationStr
+                                            LastServer   = $Info.ServerName
+                                            LastServerID = $Server.Name
+                                            Ip           = $RemoteAddr
+                                            Score        = $playerInformation.Score
+                                        }
+                                        $null = Add-PlayerSessionLog -Database $global:SandstormDB -SessionData $MatchEndedPayload
+
+                                        $LiveConnections[$Server.Name].Remove($UniqueId)
+                                    }
+#                                }
+                            }
+                        }
+                    }
+            
+                    # Check for UNetConnection Close and match Player ID.  Save player data to PlayerLogs DB
+                    elseif ($Line -match "LogNet: UNetConnection::Close:.*RemoteAddr:\s*(?:\[::ffff:)?(?<IPPort>[^,\]\s]+).*UniqueId:\s*(?<UID>\S+)") 
+                    {
+                        $RemoteAddr = ($Matches['IPPort'].Trim() -split ':')[0]
+                        $UniqueId = $Matches['UID'].Trim()
+
+                        # Clean off any potential trailing commas or formatting brackets
+                        $UniqueId = $UniqueId -replace '[,\}\]]', ''
+                            
+                        if ($UniqueId -ne "INVALID")
+                        {
+#                            if ($LiveConnections[$Server.Name].Keys -contains $UniqueId) {
+                                if ($LiveConnections -and 
+                                    $LiveConnections.ContainsKey($Server.Name) -and 
+                                    $LiveConnections[$Server.Name].ContainsKey($UniqueId)) {
+                                    $playerInformation = $LiveConnections[$Server.Name][$UniqueId]
+
+                                    $CurrentTime = [DateTime]::Now
+                                    $PlayTime = $CurrentTime - $playerInformation.LoginTime
+                                    $DurationStr = "{0:d2}:{1:d2}:{2:d2}" -f [int]$PlayTime.TotalHours, $PlayTime.Minutes, $PlayTime.Seconds
+                                                
+                                    $MatchEndedPayload = @{
+                                        NetworkID    = $UniqueId
+                                        Name         = $playerInformation.PlayerName
+                                        LastPlayed   = $playerInformation.LoginTime
+                                        Duration     = $DurationStr
+                                        LastServer   = $Info.ServerName
+                                        LastServerID = $Server.Name
+                                        Ip           = $RemoteAddr
+                                        Score        = $playerInformation.Score
+                                    }
+                                    $null = Add-PlayerSessionLog -Database $global:SandstormDB -SessionData $MatchEndedPayload
+
+                                    $LiveConnections[$Server.Name].Remove($UniqueId)
+                            }
+#                            }
+                        }
+                    }
+#                }
+            }# while ($ServerLogs[$server.Name].StreamReader.Peek() -ge 0)
 
             $rebootMSG = "" 
 

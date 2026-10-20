@@ -1,6 +1,6 @@
-<#PSScriptInfo
+ï»¿<#PSScriptInfo
 .NAME Server_Manager
-.VERSION 1.0.0
+.VERSION 1.1.0
 .AUTHOR Joanna Wick
 .TAGS Sandstorm, Server
 .PROJECTURI https://github.com/JoannaWick/Sandstorm-Server-Manager
@@ -10,7 +10,7 @@ param(
     [string]$batchLaunch=0
 )
 
-$Version = "1.0.0"
+$Version = "1.1.0"
 
 <# 
     Resize and center window
@@ -1020,7 +1020,12 @@ function install_server
                 "LogRedstoneSocket=error",
                 "LogRedstoneVoiceChatLib=error",
                 "LogRedstoneVoiceChat=error",
-                "LogVOIP=error"
+                "LogVOIP=error",
+                "LogINSChallangesEventProcessor=Error",
+                "LogHttpReplay=Error",
+                "LogAnimMontage=Error",
+                "LogNetPlayerMovement=Error"
+
             )
 
             $result = engineINIcheck -section $section -settingsToAdd $settingsToAdd -filePath $EngineiniPath
@@ -1930,18 +1935,18 @@ function Test-SteamGameStatsToken {
 
     if ($IsHexMatch) {
         Write-Host "[SUCCESS] Token structure is 100% correct!" -ForegroundColor Green
-        Write-Host "• Length check: Passed (Exactly 32 characters)" -ForegroundColor Green
-        Write-Host "• Alphanumeric/Hex check: Passed (Valid characters only)" -ForegroundColor Green
+        Write-Host "â€¢ Length check: Passed (Exactly 32 characters)" -ForegroundColor Green
+        Write-Host "â€¢ Alphanumeric/Hex check: Passed (Valid characters only)" -ForegroundColor Green
         return $SanitizedToken
     } else {
         Write-Host "[FAILURE] The Token provided is structurally INVALID!" -ForegroundColor Red
         
         # Diagnostics
         if ($SanitizedToken.Length -ne 32) {
-            Write-Host "• Length check: Failed (Length is $($SanitizedToken.Length) but must be exactly 32)" -ForegroundColor Red
+            Write-Host "â€¢ Length check: Failed (Length is $($SanitizedToken.Length) but must be exactly 32)" -ForegroundColor Red
         }
         if ($SanitizedToken -match '[^0-9a-fA-F]') {
-            Write-Host "• Character check: Failed (Contains illegal non-hex characters outside of 0-9 and A-F)" -ForegroundColor Red
+            Write-Host "â€¢ Character check: Failed (Contains illegal non-hex characters outside of 0-9 and A-F)" -ForegroundColor Red
         }
         
         Write-Host "`n[FIX] Please regenerate a fresh token at your game's official web panel." -ForegroundColor Yellow
@@ -2006,17 +2011,17 @@ function Test-SteamGSLTToken {
 
     if ($IsGSLTMatch) {
         Write-Host "[SUCCESS] GSLT structure is 100% correct!" -ForegroundColor Green
-        Write-Host "• Length check: Passed (Exactly 32 characters)" -ForegroundColor Green
-        Write-Host "• Character check: Passed (Valid alphanumeric values)`n" -ForegroundColor Green
+        Write-Host "â€¢ Length check: Passed (Exactly 32 characters)" -ForegroundColor Green
+        Write-Host "â€¢ Character check: Passed (Valid alphanumeric values)`n" -ForegroundColor Green
         return $SanitizedToken
     } else {
         Write-Host "[FAILURE] The Token provided is structurally INVALID for a GSLT!" -ForegroundColor Red
         
         if ($SanitizedToken.Length -ne 32) {
-            Write-Host "• Length check: Failed (Length is (SanitizedToken.Length) but must be exactly 32)" -ForegroundColor Red
+            Write-Host "â€¢ Length check: Failed (Length is (SanitizedToken.Length) but must be exactly 32)" -ForegroundColor Red
         }
         if ($SanitizedToken -match '[^0-9a-zA-Z]') {
-            Write-Host "• Character check: Failed (Contains illegal special characters or symbols)" -ForegroundColor Red
+            Write-Host "â€¢ Character check: Failed (Contains illegal special characters or symbols)" -ForegroundColor Red
         }
         return $false
     }
@@ -3333,7 +3338,7 @@ function Schedule_Server_Reboot
     $form.Controls.Add($btnOk)
 
     $scheduledTimes = @()
-    foreach ($time in $ManagerConfig.scheduledTimes) {
+    foreach ($time in $global:ManagerConfig.scheduledTimes) {
         $scheduledTimes += $time
         $null = $listBox.Items.Add($time) 
     }
@@ -3346,8 +3351,8 @@ function Schedule_Server_Reboot
         }
     }
 
-    $ManagerConfig.scheduledTimes = $scheduledTimes
-    $ManagerConfig | ConvertTo-Json -Depth 10 | Set-Content $ManagerConfigPath
+    $global:ManagerConfig.scheduledTimes = $scheduledTimes
+    $global:ManagerConfig | ConvertTo-Json -Depth 10 | Set-Content $ManagerConfigPath
 }
 
 $global:Server_List_Count = 0
@@ -3415,7 +3420,7 @@ function Show-Menu {
     Write-Host "    7. Restore Backup Server user.json" -NoNewLine
     Write-Host $disabled -ForegroundColor Red
     Write-Host ""
-    Write-Host "    8. Exit and Start all servers" -NoNewLine
+    Write-Host "    8. Exit and Start Servers" -NoNewLine
     Write-Host $disabled -ForegroundColor Red
     Write-Host ""
     Write-Host "    9. Exit"
@@ -3424,7 +3429,7 @@ function Show-Menu {
     Write-Host ""
     Write-Host "    S. Schedule Server Reboot Times" -ForegroundColor Green
     $scheduledTimes = @()
-    foreach ($time in $ManagerConfig.scheduledTimes) { 
+    foreach ($time in $global:ManagerConfig.scheduledTimes) { 
         $scheduledTimes += $time
         $rebootTimes = $rebootTimes + $time  + " : "
     }
@@ -3440,7 +3445,7 @@ function Show-Menu {
     }
     Write-Host ""
     Write-Host "    I. Server Launcher and Multi-Server Status Dashboard Windows" -ForegroundColor Green
-    if($ManagerConfig.closeAllWindows -eq 0)
+    if($global:ManagerConfig.closeAllWindows -eq 0)
     {
         $infoText = "Leave Open After All Servers Launched"
     }
@@ -3451,7 +3456,7 @@ function Show-Menu {
     Write-Host "       Current Setting: $infoText" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "    W. Server windows after booting" -ForegroundColor Green
-    if($ManagerConfig.closeServerWindows -eq 0)
+    if($global:ManagerConfig.closeServerWindows -eq 0)
     {
         $infoText = "Leave Server Windows Open"
     }
@@ -3462,7 +3467,7 @@ function Show-Menu {
     Write-Host "       Current Setting: $infoText" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "    T. Sandstorm Taskbar after booting" -ForegroundColor Green
-    if($ManagerConfig.closeTaskbar -eq 0)
+    if($global:ManagerConfig.closeTaskbar -eq 0)
     {
         $infoText = "Leave Sandstorm Taskbar Open"
     }
@@ -3475,7 +3480,6 @@ function Show-Menu {
     Write-Host "==============================================" -ForegroundColor Cyan
     Write-Host ""
 }
-
 
 <#
     Sandstorm Server Manager First Run
@@ -3495,7 +3499,7 @@ function Show-Menu {
 $ManagerConfigPath = Join-Path -Path $PSScriptRoot -ChildPath "config\ManagerConfig.json"
 if (-not(Test-Path $ManagerConfigPath))
 {
-    $ManagerConfig = @'
+    $global:ManagerConfig = @'
 {
     "isfirstRun":  0,
     "closeServerWindows":  0,
@@ -3505,12 +3509,12 @@ if (-not(Test-Path $ManagerConfigPath))
                        ]
 }
 '@ | ConvertFrom-Json
-    $ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
+    $global:ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
 }
 
-$ManagerConfig=Get-Content $ManagerConfigPath -Raw | ConvertFrom-Json
+$global:ManagerConfig=Get-Content $ManagerConfigPath -Raw | ConvertFrom-Json
 
-if ($ManagerConfig.isFirstRun -eq 0)
+if ($global:ManagerConfig.isFirstRun -eq 0)
 {
     $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
@@ -3744,8 +3748,8 @@ if ($ManagerConfig.isFirstRun -eq 0)
                 $response = [System.Windows.MessageBox]::Show($msgBody, $msgTitle, $msgButton, $msgIcon)
 
                 if ($response -eq "Yes") {
-                    $ManagerConfig.isFirstRun = 1
-                    $ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
+                    $global:ManagerConfig.isFirstRun = 1
+                    $global:ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
                     Restart-Computer -Force
                 }
                 exit
@@ -3757,13 +3761,13 @@ if ($ManagerConfig.isFirstRun -eq 0)
             }
         }
 
-        $ManagerConfig.isFirstRun = 1
-        $ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
+        $global:ManagerConfig.isFirstRun = 1
+        $global:ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
     }
     else
     {
-        $ManagerConfig.isFirstRun = 1
-        $ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
+        $global:ManagerConfig.isFirstRun = 1
+        $global:ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
     }
 
     Write-Host ""
@@ -3857,10 +3861,21 @@ do {
             else
             {
                 Write-Host "`n Starting all Sandstorm Servers Goodbye!" -ForegroundColor Yellow
-                Start-Sleep -Seconds 1
-                $Start_Multi_Server = Join-Path -Path $PSScriptRoot -ChildPath "Start_Server_Launcher.bat"
 
-                Start-Process -FilePath "$Start_Multi_Server"
+                $forcedReboot = Join-Path -Path $PSScriptRoot -ChildPath "config\forcedReboot.check"
+                Set-Content -Path $forcedReboot -Value "1" -Force
+
+                $isWindowOpen = [bool](Get-Process -ErrorAction SilentlyContinue | Where-Object { 
+                    $_.MainWindowTitle -like '*Sandstorm_Multi_Server*' -and $_.MainWindowHandle -ne 0 
+                })
+
+                if (-not $isWindowOpen) 
+                {
+                    $scriptTitle = "Start Server Launcher"
+                    $batchFilename = "Start_Server_Launcher.bat"
+ 
+                    Start-Process "cmd.exe" -ArgumentList "/c TITLE $scriptTitle && CALL $batchFilename" -WorkingDirectory "$PSScriptRoot"
+                }
                 Exit
             }
         }
@@ -3873,16 +3888,16 @@ do {
             Schedule_Server_Reboot
         }
         'I' {
-            $ManagerConfig.closeAllWindows = 1 - $ManagerConfig.closeAllWindows
-            $ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
+            $global:ManagerConfig.closeAllWindows = 1 - $ManagerConfig.closeAllWindows
+            $global:ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
         }
         'W' {
-            $ManagerConfig.closeServerWindows = 1 - $ManagerConfig.closeServerWindows
-            $ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
+            $global:ManagerConfig.closeServerWindows = 1 - $ManagerConfig.closeServerWindows
+            $global:ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
         }
         'T' {
-            $ManagerConfig.closeTaskbar = 1 - $ManagerConfig.closeTaskbar
-            $ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
+            $global:ManagerConfig.closeTaskbar = 1 - $ManagerConfig.closeTaskbar
+            $global:ManagerConfig | ConvertTo-Json | Set-Content $ManagerConfigPath
         }
         default {
             Write-Host "`n Invalid choice! Please select a number from 1 to 9." -ForegroundColor Red

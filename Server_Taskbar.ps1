@@ -28,7 +28,8 @@ param
     [string]$serverOverrideButtons,
     [int]$closeAllWindows,
     [int]$closeServerWindows,
-    [int]$closeTaskbar
+    [int]$closeTaskbar,
+    [string]$thisScriptRoot
 )
 
 Add-Type -AssemblyName System.Windows.Forms
@@ -48,6 +49,7 @@ $form.Width = $workingArea.Width
 $form.Height = 40
 $form.Left = $workingArea.Left
 $form.Top = $workingArea.Bottom - $form.Height
+$form.Text = "Sandstorm_Taskbar"
 
 # Main Layout Container
 $mainBarLayout = New-Object System.Windows.Forms.Panel
@@ -365,7 +367,7 @@ function show-Menu
     [void]$form.ShowDialog()
 }
 
-$version = "1.0.0"
+$version = "1.1.0"
 
 # About Server Manager
 
@@ -386,7 +388,7 @@ Add-MenuButton " About " {
 
 # Reboot Server List
 
-Add-MenuButton "Reboot a Server" {
+Add-MenuButton "Reboot Server" {
 
     $ButtonList = @()
 
@@ -523,6 +525,8 @@ Add-MenuButton "Reboot a Server" {
 
             if ($response -eq "Yes") {
                 taskkill /f /t /pid $serverPID
+                Get-Process | Where-Object { $_.MainWindowTitle -like '*$serverName*' } | Stop-Process -Force
+                taskkill /fi "windowtitle eq $serverName*" /f
                 Add-Type -AssemblyName System.Windows.Forms
                 Add-Type -AssemblyName System.Drawing
                 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -764,6 +768,173 @@ Add-MenuButton "Reboot a Server" {
     $ButtonList += @{ Text = $serverName;    Action = $actionBlock }
 
     show-Menu -ButtonList $ButtonList -windowTitle "Reboot Server List"
+}
+
+# Disable Server List
+
+Add-MenuButton "Disable Server" {
+
+    $ButtonList = @()
+
+    # --- DYNAMICALLY ADD AS MANY BUTTONS AS YOU WANT ---
+    $buttonarray = $($serverOverrideButtons).Split(';')
+
+    for ($i = 0; $i -lt $buttonarray.Count; $i += 2) 
+    {
+        $serverName = $buttonarray[$i]
+        $serverPID = $buttonarray[$i + 1]
+
+        $actionBlock = {
+            Add-Type -AssemblyName System.Windows.Forms
+            Add-Type -AssemblyName System.Drawing
+            [System.Windows.Forms.Application]::EnableVisualStyles()
+
+            # Base Dialog Form
+            $msgForm = New-Object System.Windows.Forms.Form
+            $msgForm.Text = "Confirmation"
+            $msgForm.Size = New-Object System.Drawing.Size(360, 180)
+            $msgForm.StartPosition = "CenterParent"
+            $msgForm.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+            $msgForm.MaximizeBox = $false
+            $msgForm.MinimizeBox = $false
+            $msgForm.BackColor = [System.Drawing.Color]::FromArgb(248, 249, 250) # Dark Theme
+
+            # Message Label
+            $label = New-Object System.Windows.Forms.Label
+            $label.Text = "Are you sure you want to Disable: $serverName ?"
+            $label.Font = New-Object System.Drawing.Font("Segoe UI", 9.5, [System.Drawing.FontStyle]::Bold)
+
+            $label.ForeColor = [System.Drawing.Color]::FromArgb(197, 34, 31)
+            $label.BackColor = [System.Drawing.Color]::FromArgb(252, 232, 230)
+            $label.Location = New-Object System.Drawing.Point(25, 25)
+            $label.Size = New-Object System.Drawing.Size(300, 50)
+            $label.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+            $msgForm.Controls.Add($label)
+
+            # Create the button
+            $btnYes = New-Object System.Windows.Forms.Button
+            $btnYes.Text = "Yes"
+            $btnYes.Font = New-Object System.Drawing.Font("Segoe UI", 9.5, [System.Drawing.FontStyle]::Bold)
+
+            $btnYes.ForeColor = [System.Drawing.Color]::FromArgb(33, 37, 41)
+            $btnYes.BackColor = [System.Drawing.Color]::FromArgb(230, 244, 234)
+            $btnYes.Size = New-Object System.Drawing.Size(95, 35)
+            $btnYes.Location = New-Object System.Drawing.Point(65, 85)
+            $btnYes.DialogResult = [System.Windows.Forms.DialogResult]::Yes
+
+            # CRITICAL STYLE SETTINGS: 
+            # If these two lines are missing, Windows draws a sharp fallback border over the curve.
+            $btnYes.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+            $btnYes.FlatAppearance.BorderSize = 0
+
+            # FORCE ROUNDING VIA PAINT EVENT (Fixes the non-rounding issue)
+            $btnYes.Add_Paint({
+                param($sender, $e)
+    
+                $width = $sender.Width
+                $height = $sender.Height
+                $radius = 5 # Change this to make it more or less round
+                $diameter = $radius * 2
+
+                $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+    
+                # Construct the curved shape path
+                $path.AddArc(0, 0, $diameter, $diameter, 180, 90)
+                $path.AddArc(($width - $diameter - 1), 0, $diameter, $diameter, 270, 90)
+                $path.AddArc(($width - $diameter - 1), ($height - $diameter - 1), $diameter, $diameter, 0, 90)
+                $path.AddArc(0, ($height - $diameter - 1), $diameter, $diameter, 90, 90)
+                $path.CloseAllFigures()
+    
+                # Apply the mask directly to the active control region
+                $sender.Region = New-Object System.Drawing.Region($path)
+
+                $e.Graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+                $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(206, 212, 218), 1)
+                $e.Graphics.DrawPath($pen, $path)
+                $pen.Dispose()
+            })
+
+            $msgForm.Controls.Add($btnYes)
+
+            # Create the button
+            $btnNo = New-Object System.Windows.Forms.Button
+            $btnNo.Text = "No"
+            $btnNo.Font = New-Object System.Drawing.Font("Segoe UI", 9.5, [System.Drawing.FontStyle]::Bold)
+
+            $btnNo.ForeColor = [System.Drawing.Color]::FromArgb(33, 37, 41)
+            $btnNo.BackColor = [System.Drawing.Color]::FromArgb(252, 232, 230)
+            $btnNo.Size = New-Object System.Drawing.Size(95, 35)
+            $btnNo.Location = New-Object System.Drawing.Point(185, 85)
+            $btnNo.DialogResult = [System.Windows.Forms.DialogResult]::No
+
+            # CRITICAL STYLE SETTINGS: 
+            # If these two lines are missing, Windows draws a sharp fallback border over the curve.
+            $btnNo.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+            $btnNo.FlatAppearance.BorderSize = 0
+
+            # FORCE ROUNDING VIA PAINT EVENT (Fixes the non-rounding issue)
+            $btnNo.Add_Paint({
+                param($sender, $e)
+    
+                $width = $sender.Width
+                $height = $sender.Height
+                $radius = 5 # Change this to make it more or less round
+                $diameter = $radius * 2
+
+                $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+        
+                # Construct the curved shape path
+                $path.AddArc(0, 0, $diameter, $diameter, 180, 90)
+                $path.AddArc(($width - $diameter - 1), 0, $diameter, $diameter, 270, 90)
+                $path.AddArc(($width - $diameter - 1), ($height - $diameter - 1), $diameter, $diameter, 0, 90)
+                $path.AddArc(0, ($height - $diameter - 1), $diameter, $diameter, 90, 90)
+                $path.CloseAllFigures()
+    
+                # Apply the mask directly to the active control region
+                $sender.Region = New-Object System.Drawing.Region($path)
+
+                $e.Graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+                $pen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(206, 212, 218), 1)
+                $e.Graphics.DrawPath($pen, $path)
+                $pen.Dispose()
+            })
+
+            $msgForm.Controls.Add($btnNo)
+
+            # Assign default confirmation buttons for accessibility
+            $msgForm.AcceptButton = $btnYes  # Pressing 'Enter' fires Yes
+            $msgForm.CancelButton = $btnNo  # Pressing 'Escape' fires No
+    
+            $response = $msgForm.ShowDialog()
+
+            if ($response -eq "Yes") {
+                taskkill /f /t /pid $serverPID
+                Get-Process | Where-Object { $_.MainWindowTitle -like '*$serverName*' } | Stop-Process -Force
+                taskkill /fi "windowtitle eq $serverName*" /f
+
+                $ServerListJsonPath = Join-Path -Path $thisScriptRoot -ChildPath "config\ServerList.json"
+                $ServerListData=Get-Content $ServerListJsonPath | ConvertFrom-Json
+
+                $isDisabled = $ServerListData.$serverName.Disabled
+
+                if ($isDisabled)
+                {
+                    $isDisabled = $false
+                }
+                else
+                {
+                    $isDisabled = $true
+                }
+
+                $ServerListData.$serverName.Disabled = $isDisabled
+                $ServerListData | ConvertTo-Json | Set-Content -Path $ServerListJsonPath
+            }
+        }.GetNewClosure()
+
+        $ButtonList += @{ Text = $serverName;    Action = $actionBlock }
+    }
+
+    show-Menu -ButtonList $ButtonList -windowTitle "Disable Server List"
 }
 
 # Minimize InsurgencyServer-Win64-Shipping windows
@@ -1156,9 +1327,6 @@ Add-MenuButton "Kill All Servers" {
         Start-Sleep -Milliseconds 100
         Get-Process | Where-Object { $_.MainWindowTitle -like '*Multi-Server Status Dashboard (Live Updates)*' } | Stop-Process -Force
         taskkill /fi "windowtitle eq Multi-Server Status Dashboard (Live Updates)*" /f
-        Start-Sleep -Milliseconds 100
-        Get-Process | Where-Object { $_.MainWindowTitle -like 'Server_Taskbar' } | Stop-Process -Force
-        taskkill /fi "windowtitle eq Server_Taskbar*" /f
 
         $form.close()
     }
@@ -1180,6 +1348,7 @@ $null = $ps.AddParameter('serverOverrideButtons', $serverOverrideButtons)
 $null = $ps.AddParameter('closeAllWindows', $closeAllWindows)
 $null = $ps.AddParameter('closeServerWindows', $closeServerWindows)
 $null = $ps.AddParameter('closeTaskbar', $closeTaskbar)
+$null = $ps.AddParameter('thisScriptRoot', $PSScriptRoot)
 $ps.Runspace = $rs
 $handle = $ps.BeginInvoke()
 

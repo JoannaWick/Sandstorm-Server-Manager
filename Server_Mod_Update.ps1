@@ -396,6 +396,29 @@ if (-not(Test-Path $ModListJsonPath))
     $ModListData | ConvertTo-Json | Set-Content $ModListJsonPath
 }
 
+# Initialize an empty array to collect all mod data
+$AllModLists = @()
+$ConfigDir = Join-Path -Path $PSScriptRoot -ChildPath "config"
+
+if (Test-Path $ConfigDir) {
+    Get-ChildItem -Path $ConfigDir -Filter "ModList.*.json" -File | ForEach-Object {
+        if ($_.FullName -ne $ModListJsonPath) {
+            $JsonData = Get-Content -Path $_.FullName -Raw | ConvertFrom-Json
+         
+            if ($null -ne $JsonData) {
+                foreach ($Property in $JsonData.PSObject.Properties) {
+                    $Id = $Property.Name  # Extracts "98204", "98373", etc.
+                        
+                    # 2. Add to array if it is not already in the scan list
+                    if ($Id -notin $AllMods) {
+                        $AllMods += $Id
+                    }
+                }
+            }
+        }
+    }
+}
+
 echo ""
 echo "=============================================="
 echo "       Downloading your Subscriptions         "
@@ -643,7 +666,14 @@ for ($p = 0; $p -lt $PageCount; $p++)
       	if(-not(Test-Path "$destinationMods$directory_ID"))
         {
            	$null=mkdir "$destinationMods$directory_ID" -ErrorAction SilentlyContinue
-            $update=$true
+
+            if ($AllMods -contains [string]$modid) {
+                $update=$false
+            }
+            else
+            {
+                $update=$true
+            }
         }
 
         # if file already downloaded and in use by another server bypass the download
@@ -666,88 +696,87 @@ for ($p = 0; $p -lt $PageCount; $p++)
    	        Write-Host "  Downloading $subname - $directory_ID - $modFilename - $modFilesize MB" -ForegroundColor Yellow
 	        echo ""
 
-            # Track the precise download duration 
-<#            $elapsedTime = Measure-Command {
-#                $webClient = New-Object System.Net.WebClient
-#                $webClient.DownloadFile($modURL, "zip\$modFilename")
-
-                $ProgressPreference = 'SilentlyContinue'
-                Invoke-WebRequest -Uri $modURL -OutFile "zip\$modFilename" -TimeoutSec 30 -UseBasicParsing
-                $ProgressPreference = 'Continue'
-            }
-#>
-
 # Explicitly load the missing HTTP assembly into the current session
 Add-Type -AssemblyName System.Net.Http
 
-# Track the precise download duration 
 $elapsedTime = Measure-Command {
     # Initialize the modern web client handler using the type accelerator
     $httpClient = [System.Net.Http.HttpClient]::new()
     
-    # Send request and pull the raw web data stream
-    $responseTask = $httpClient.GetAsync($modURL, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead)
-    $response = $responseTask.GetAwaiter().GetResult()
-    
-    # Get true file size from headers (fallback to 0 if hidden)
-    $totalBytes = if ($response.Content.Headers.ContentLength) { $response.Content.Headers.ContentLength } else { 0 }
-    $totalMb = $totalBytes / 1MB
-
-    $responseStreamTask = $response.Content.ReadAsStreamAsync()
-    $responseStream = $responseStreamTask.GetAwaiter().GetResult()
-
-    # Ensure the target directory exists before creating the file
-    if (-not (Test-Path "zip")) { New-Item -ItemType Directory -Path "zip" -Force | Out-Null }
-    
-    # Create local zip destination file payload layout
-    $fileStream = [System.IO.File]::Create("zip\$modFilename")
-
-    # Set a 64KB transit memory buffer block size
-    $buffer = New-Object Byte[] 65536
-    $bytesReceived = 0
-
-    # Start a high-precision stopwatch to track live speed and ETA
-    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-
-    # Actively copy chunks to disk and calculate numbers raw
-    while (($bytesRead = $responseStream.Read($buffer, 0, $buffer.Length)) -gt 0) { $fileStream.Write($buffer, 0,$bytesRead)
-        $bytesReceived += $bytesRead
+    try {
+        # Send request and pull the raw web data stream
+        $responseTask = ($httpClient.GetAsync($modURL, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead))
+        $response = $responseTask.GetAwaiter().GetResult()
         
-        $mbReceived = $bytesReceived / 1MB
-        $elapsedSec = $stopwatch.Elapsed.TotalSeconds
+        # Get true file size from headers (fallback to 0 if hidden)
+        $totalBytes = if ($response.Content.Headers.ContentLength) {$response.Content.Headers.ContentLength } else { 0 }
+        $totalMb = $totalBytes / 1MB
 
-        if ($totalBytes -gt 0) { $percent = ($bytesReceived / $totalBytes) * 100
+        $responseStreamTask = $response.Content.ReadAsStreamAsync()
+        $responseStream = $responseStreamTask.GetAwaiter().GetResult()
+
+        # Ensure \$modFilename isn't empty to prevent null file crashes
+        if ([string]::IsNullOrWhiteSpace($modFilename)) {
+            throw "The variable `$modFilename is empty. Cannot create a file with no name."
+        }
+
+        # Use an ABSOLUTE path for .NET compatibility
+        $targetFolder = Join-Path $PSScriptRoot "zip" 
+        if (-not (Test-Path $targetFolder)) { New-Item -ItemType Directory -Path $targetFolder -Force | Out-Null }
+        $absoluteFilePath = Join-Path $targetFolder $modFilename
+
+        # Create local zip destination file payload layout securely
+        $fileStream = [System.IO.File]::Create($absoluteFilePath)
+
+        # Set a 64KB transit memory buffer block size
+        $buffer = New-Object Byte[] 65536
+        $bytesReceived = 0
+
+        # Start a high-precision stopwatch to track live speed and ETA
+        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
+        # Actively copy chunks to disk and calculate numbers raw
+        while (($bytesRead = $responseStream.Read($buffer, 0, $buffer.Length)) -gt 0) {$fileStream.Write($buffer, 0,$bytesRead)
+            $bytesReceived += $bytesRead
             
-            # Calculate live speed and estimated time remaining
-            if ($elapsedSec -gt 0.1) { 
-                $bytesPerSec = $bytesReceived / $elapsedSec
-                $bytesRemaining = $totalBytes - $bytesReceived 
-                $secondsLeft = [Math]::Max(0, ($bytesRemaining / $bytesPerSec))
-                
-                # Format time cleanly as MM:SS
-                $etaTime = [TimeSpan]::FromSeconds($secondsLeft)
-                $etaString = "{0:D2}m:{1:D2}s" -f $etaTime.Minutes, $etaTime.Seconds
-            } else {
-                $etaString = "--m:--s"
-            }
+            $mbReceived = $bytesReceived / 1MB
+            $elapsedSec = $stopwatch.Elapsed.TotalSeconds
 
-            Write-Host ("`r  Downloaded: {0:N2} MB of {1:N2} MB ({2:N2}%) | ETA: {3}" -f $mbReceived, $totalMb, $percent, $etaString) -NoNewline
-        } else {
-            # Fallback layout if the web server hides the file size header
-            Write-Host ("`r  Downloaded: {0:N2} MB (Total size unknown)" -f $mbReceived) -NoNewline
+            if ($totalBytes -gt 0) {$percent = ($bytesReceived / $totalBytes) * 100
+                
+                # Calculate live speed and estimated time remaining
+                if ($elapsedSec -gt 0.1) {$bytesPerSec = $bytesReceived / $elapsedSec
+                    $bytesRemaining = $totalBytes - $bytesReceived
+                    $secondsLeft = [Math]::Max(0, ($bytesRemaining / $bytesPerSec))
+                    
+                    # Format time cleanly as MM:SS
+                    $etaTime = [TimeSpan]::FromSeconds($secondsLeft)
+                    $etaString = "{0:D2}m:{1:D2}s" -f $etaTime.Minutes, $etaTime.Seconds
+                } else {
+                    $etaString = "--m:--s"
+                }
+
+                Write-Host ("`r  Downloaded: {0:N2} MB of {1:N2} MB ({2:N2}%) | ETA: {3}" -f $mbReceived, $totalMb, $percent, $etaString) -NoNewline
+            } else {
+                # Fallback layout if the web server hides the file size header
+                Write-Host ("`r  Downloaded: {0:N2} MB (Total size unknown)" -f $mbReceived) -NoNewline
+            }
         }
     }
-
-    # Clean up file handlers cleanly
-    $stopwatch.Stop()
-    $fileStream.Close()
-    $fileStream.Dispose()
-    $responseStream.Close()
-    $responseStream.Dispose()
-    $httpClient.Dispose()
-    
-    Write-Host "" # Break line safely on finish
-    Write-Host "" # Break line safely on finish
+    catch {
+        # This catches errors that Measure-Command normally hides
+        Write-Error "A terminating error occurred: \$_"
+    }
+    finally {
+        # Clean up file handlers cleanly and reliably even if a crash happens
+        if ($null -ne $stopwatch) {$stopwatch.Stop() }
+        if ($null -ne $fileStream) { $fileStream.Close(); $fileStream.Dispose() }
+        if ($null -ne $responseStream) { $responseStream.Close(); $responseStream.Dispose() }
+        if ($null -ne $httpClient) { $httpClient.Dispose() }
+        
+        Write-Host "" # Break line safely on finish
+        Write-Host "" # Break line safely on finish
+    }
 }
 
             # Calculate file size and download metrics
@@ -892,17 +921,19 @@ foreach ($item in $ModListData) {
  
         if ($ModListData_delete_comparison.${modDeleteID} -eq $null)
         {
-<#
-         	if(-not(Test-Path "$destinationMods$modDeleteID"))
+            if ($AllMods -notcontains [string]$modid) 
             {
-                Write-Host "Mod: $modDeleteID - $modDeleteName not found" -ForegroundColor Yellow
+             	if(-not(Test-Path "$destinationMods$modDeleteID"))
+                {
+                    Write-Host "Mod: $modDeleteID - $modDeleteName not found" -ForegroundColor Yellow
+                }
+                else
+                {
+                    Write-Host "Deleting Unsubscribed Mod: $modDeleteID - $modDeleteName" -ForegroundColor Red
+                    Remove-Item -Path "$destinationMods$modDeleteID" -Recurse -Force
+                }
             }
-            else
-            {
-                Write-Host "Deleting Unsubscribed Mod: $modDeleteID - $modDeleteName" -ForegroundColor Red
-                Remove-Item -Path "$destinationMods$modDeleteID" -Recurse -Force
-            }
-#>
+
             $ModListData.PSObject.Properties.Remove($modDeleteID)
             $deletedMods+=1
         }

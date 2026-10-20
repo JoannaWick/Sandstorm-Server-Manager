@@ -56,6 +56,27 @@ echo Done! Configuration batchFirstRun.cfg updated.
 echo User will not see this again.
 echo.
 
+SET "SOURCE_DIR=%~dp0support\InsurgencySandstorm\steamapps\common\sandstorm_server"
+SET "DEST_DIR=%~dp0InsurgencySandstorm\steamapps\common\sandstorm_server"
+SET "FILE_NAME=startSandstormServer.bat"
+
+REM Check if the target destination file exists
+IF EXIST "%DEST_DIR%\%FILE_NAME%" (
+    ECHO Target file found. Copying update...
+    
+    REM Perform the single-file copy operation using Robocopy
+    ROBOCOPY "%SOURCE_DIR%" "%DEST_DIR%" "%FILE_NAME%" /IS /R:3 /W:5 /NFL /NDL /NJH /NJS /NC /NS >NUL 2>&1
+    
+    REM Robocopy exit codes 0-7 all indicate successful or redundant copies
+    IF !ERRORLEVEL! LEQ 7 (
+        ECHO [SUCCESS] %FILE_NAME% updated successfully.
+    ) ELSE (
+        ECHO [ERROR] Robocopy failed with Exit Code !ERRORLEVEL!. Please check file permissions or source path.
+    )
+)
+
+pause
+
 :LaunchGame
 
 Powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Server_Manager.ps1" -batchLaunch "1"

@@ -34,6 +34,7 @@ foreach ($item in $ServerListData) {
         }
     }
 }
+
 $windows_to_move += 1
 
 $infoMonitor_to_move = $windows_to_move
@@ -234,9 +235,6 @@ $global:TaskQueue = [System.Collections.Concurrent.ConcurrentQueue[PSCustomObjec
 # State tracking
 $global:ActiveTasks = 0
 $global:TaskProcessingActive = $false
-$cmdPID = (Get-CimInstance Win32_Process -Filter "ProcessId=$PID").ParentProcessId
-
-Set-Variable -Name "windowPID" -Scope "Global" -Value @($cmdPID, 0)
 
 function Test-TargetWindowExists {
     param (
@@ -276,6 +274,46 @@ function Test-TargetWindowExists {
     }
 
 #    Write-Host "No active matching process found."
+    return $false
+}
+
+function Get-TargetWindowId {
+    param (
+        [string]$Server_ID
+    )
+    $pattern = "(?<=TITLE\s+)$Server_ID(?=\s+&&)"
+    
+    # Create an empty array to collect all matching IDs
+    $foundIds = [System.Collections.Generic.List[int]]::new()
+
+    # Check native Window Titles
+    $nativeMatches = Get-Process -Name "cmd" -ErrorAction SilentlyContinue | 
+                     Where-Object { $_.MainWindowTitle -match $pattern }
+    foreach ($match in $nativeMatches) { $foundIds.Add($match.Id) }
+
+    # Fallback for Windows 11 Terminal (CommandLine args)
+    $cimMatches = Get-CimInstance -ClassName Win32_Process -Filter "Name = 'cmd.exe'" -ErrorAction SilentlyContinue
+    foreach ($proc in $cimMatches) {
+        if ($proc.CommandLine -match $pattern) {
+            # Ensure we don't add duplicate IDs if already caught by native title
+            if ($proc.ProcessId -notin $foundIds) {
+                $foundIds.Add($proc.ProcessId)
+            }
+        }
+    }
+
+    # Deep check - Windows Terminal active title frame
+    $terminalMatches = Get-Process -Name "WindowsTerminal" -ErrorAction SilentlyContinue | 
+                       Where-Object { $_.MainWindowTitle -match $pattern }
+    foreach ($match in $terminalMatches) {
+        if ($match.Id -notin $foundIds) { $foundIds.Add($match.Id) }
+    }
+
+    # If we collected any IDs, return them. Otherwise, return $false.
+    if ($foundIds.Count -gt 0) {
+        return $foundIds.ToArray()
+    }
+
     return $false
 }
 
@@ -501,43 +539,6 @@ $rebootTitles = @()
     Add non-running servers to Task Processor
 #>
 
-<#
-foreach ($item in $ServerListData) {
-
-    # Get each dynamic top element name and value
-    foreach ($property in $item.PSObject.Properties) {
-        $Server_ID = $property.Name
-        $serverValue = $property.Value.Disabled
-
-        if (-not $serverValue)
-        {
-            $windows_to_move += 1
-            
-            # Filter tasks with the exact window title and extract the PID
-#            $taskInfo = tasklist /v /fo csv | ConvertFrom-Csv | Where-Object { $_."Window Title" -like "*$Server_ID*" -and $_."Image Name" -eq "cmd.exe" }
-#            $ismcCmdId = $taskInfo.PID
-
-            # Query WMI/CIM natively (Works identically on Win 10 & Win 11)
-            $taskInfo = Get-CimInstance Win32_Process -Filter "Name = 'cmd.exe'" | 
-                Where-Object { $_.CommandLine -like "*$Server_ID*" }
-
-            # Extract the PID (Using .ProcessId safely handles single or multiple matches)
-            $ismcCmdId = $taskInfo.ProcessId
-
-            if (-not $ismcCmdId) {
-                $rebootTitles += @($Server_ID)
-
-                Add-TaskToQueue -Param1 "$Server_ID"
-            }
-            else
-            {
-                $targetTitles += @($Server_ID)
-            }
-        }
-    }
-}
-#> 
-
 if (($ServerListData.PSObject.Properties).count -gt 0) {
     foreach ($property in $ServerListData.psobject.Properties) {
         $Server_ID = $property.Name
@@ -547,14 +548,19 @@ if (($ServerListData.PSObject.Properties).count -gt 0) {
         {
             $windows_to_move += 1
             
-            $taskInfo = Get-CimInstance Win32_Process -Filter "Name = 'cmd.exe'" | 
-                Where-Object { $_.CommandLine -like "*$Server_ID*" }
-
-            # Extract the PID (Using .ProcessId safely handles single or multiple matches)
-            $ismcCmdId = $taskInfo.ProcessId
-
-            if (-not $ismcCmdId) {
+            if (-not (Test-TargetWindowExists -Server_ID $Server_ID)) {
                 $rebootTitles += @($Server_ID)
+
+                $sourceLoopCheck = Join-Path -Path $PSScriptRoot -ChildPath "config\$Server_ID.check"
+
+                if (Test-Path -Path $sourceLoopCheck) {
+                    $currentValue = [int](Get-Content -Path $sourceLoopCheck -Raw)
+                    $newValue = $currentValue + 1    
+                } else {
+                    $newValue = 0
+                }
+
+                Set-Content -Path $sourceLoopCheck -Value $newValue -Force
 
                 Add-TaskToQueue -Param1 "$Server_ID"
             }
@@ -565,6 +571,10 @@ if (($ServerListData.PSObject.Properties).count -gt 0) {
         }
         else
         {
+            $sourceLoopCheck = Join-Path -Path $PSScriptRoot -ChildPath "config\$Server_ID.check"
+            if (Test-Path -Path $sourceLoopCheck) {
+                Remove-Item -Path $sourceLoopCheck -Force -ErrorAction SilentlyContinue
+            }
             Write-Host "(Server_ID=$Server_ID) -=> DISABLED" -ForegroundColor DarkYellow
         }
     }
@@ -648,6 +658,7 @@ for ($i = 0; $i -lt $ServerInstances.Count; $i++) {
         $searchStrings = @(
             "OnCreateSessionComplete: Session: (GameSession) Result: (0)", 
             "Empty session setting ModList  : OnlineService of type String"
+            "LogOnline: Warning: OSS: Async task 'FOnlineAsyncTaskSteamCreateServer bWasSuccessful: 0' failed"
         )
 
         # Safely define your file path
@@ -669,6 +680,25 @@ for ($i = 0; $i -lt $ServerInstances.Count; $i++) {
                 Stop-Process -Id $Server.Id -Force -ErrorAction SilentlyContinue
                 taskkill /f /t /pid $Server.Id
                 $serverfailed = $true
+
+                $sourceLoopCheck = Join-Path -Path $PSScriptRoot -ChildPath "config\$Title.check"
+                if (Test-Path -Path $sourceLoopCheck) {
+                    $currentValue = [int](Get-Content -Path $sourceLoopCheck -Raw)
+                    if ($currentValue -gt 4) {
+                        Remove-Item -Path $sourceLoopCheck -Force -ErrorAction SilentlyContinue
+
+                        $ServerListData.$Title.Disabled = $true
+                        $ServerListJsonPath = Join-Path -Path $PSScriptRoot -ChildPath "config\ServerList.json"
+                        $ServerListData | ConvertTo-Json | Set-Content -Path $ServerListJsonPath
+                    }
+                }
+            }
+            else
+            {
+                $sourceLoopCheck = Join-Path -Path $PSScriptRoot -ChildPath "config\$Title.check"
+                if (Test-Path -Path $sourceLoopCheck) {
+                    Remove-Item -Path $sourceLoopCheck -Force -ErrorAction SilentlyContinue
+                }
             }
         }
     }
@@ -691,8 +721,6 @@ if(-not $serverfailed)
     $argumentPayload = "/c TITLE $scriptTitle && CALL `"$batchFilename`" $joinedString"
 
     $infoProcess = Start-Process "cmd.exe" -ArgumentList $argumentPayload -WorkingDirectory "$PSScriptRoot" -PassThru
-
-    $global:windowPID[1] = $infoProcess.Id
 
     $ManagerConfigPath = Join-Path -Path $PSScriptRoot -ChildPath "config\ManagerConfig.json"
     $ManagerConfig=Get-Content $ManagerConfigPath -Raw | ConvertFrom-Json
@@ -755,7 +783,14 @@ if(-not $serverfailed)
                 Write-Host "No active cmd process found with the window title $Server_ID."
                 $processFailed = $true
             }
-      }
+        }
+
+        $forcedReboot = Join-Path -Path $PSScriptRoot -ChildPath "config\forcedReboot.check"
+        if (Test-Path $forcedReboot)
+        {
+             Remove-Item -Path $forcedReboot -Force -ErrorAction SilentlyContinue
+             $processFailed = $true
+        }
 
         # Check if time to reboot Servers from Schedule List
         if ($scheduledTimes.count -gt 0)
@@ -768,6 +803,23 @@ if(-not $serverfailed)
             if ($scheduledTimes -contains $currentTime) {
                 # Stop all running servers
                 Stop-Process -Name "InsurgencyServer-Win64-Shipping" -Force
+
+                Start-Sleep -Seconds 30
+
+                for ($i = 0; $i -lt $targetTitles.Count; $i++) 
+                {
+                    $windowIds = Get-TargetWindowId -Server_ID $targetTitles[$i]
+
+                    if ($windowIds) 
+                    {
+                        foreach ($id in $windowIds) 
+                        {
+                            taskkill /F /PID $id /T
+
+                        }
+                    }
+                }
+
                 $processFailed = $true 
             }
         }
