@@ -1,7 +1,7 @@
 # Sandstorm Server Manager
 ## Created for Insurgency Sandstorm 1.21 by Joanna Wick
-### Version: 1.1.0
-### Date: 2026-10-20
+### Version: 1.1.1
+### Date: 2026-10-25
 
 This package can Install/Add one or more Insurgency Sandstorm Server without the need to use Virtual Machines. It will keep mods updated, monitor players and restart downed servers automatically.
 
@@ -113,6 +113,12 @@ Provide step-by-step instructions on how to install and run your distribution.
 
 Change Log
 ==========
+
+1.1.1 (2026-10-25)
+
+    1. [REMOVED]  Removed the Network Activity GUI as there were too many issues with Windows 11 systems.
+    2. [FIXED] Server Manager: When editing GameStatsToken it would not save.  The Token did save on Install or Import but changing it later would not save.
+    3. [DEPRECATED] Version 1 of the Sandstorm Server manager will no longer be updated.  Please update to Version 2 when released.
 
 1.1.0 (2026-10-20)
 
