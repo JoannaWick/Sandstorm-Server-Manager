@@ -1,6 +1,6 @@
 ﻿<#PSScriptInfo
 .NAME Server_Manager
-.VERSION 1.1.0
+.VERSION 1.1.1
 .AUTHOR Joanna Wick
 .TAGS Sandstorm, Server
 .PROJECTURI https://github.com/JoannaWick/Sandstorm-Server-Manager
@@ -10,7 +10,7 @@ param(
     [string]$batchLaunch=0
 )
 
-$Version = "1.1.0"
+$Version = "1.1.1"
 
 <# 
     Resize and center window
@@ -2806,6 +2806,8 @@ function server_configuration_editor
                 Write-Host ""
 
                 $configData.GSLTToken = get-GSLTToken -promptQuestion "Enter Steam GSLT Token (or press Enter to cancel)" -textData $configData.GSLTToken
+
+                save_server_configuration -configData $configData -configPath $configPath
             }
             '7' {
                 Write-Host ""

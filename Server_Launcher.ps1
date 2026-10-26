@@ -657,7 +657,7 @@ for ($i = 0; $i -lt $ServerInstances.Count; $i++) {
         # Define all the strings you want to flag a server failure on
         $searchStrings = @(
             "OnCreateSessionComplete: Session: (GameSession) Result: (0)", 
-            "Empty session setting ModList  : OnlineService of type String"
+            "Empty session setting ModList  : OnlineService of type String",
             "LogOnline: Warning: OSS: Async task 'FOnlineAsyncTaskSteamCreateServer bWasSuccessful: 0' failed"
         )
 

@@ -1,6 +1,6 @@
 <#PSScriptInfo
 .NAME Server_Taskbar
-.VERSION 1.0.0
+.VERSION 1.1.1
 .AUTHOR Joanna Wick
 .TAGS Sandstorm, Mods
 .PROJECTURI https://github.com/JoannaWick/Sandstorm-Server-Manager
@@ -367,7 +367,7 @@ function show-Menu
     [void]$form.ShowDialog()
 }
 
-$version = "1.1.0"
+$version = "1.1.1"
 
 # About Server Manager
 

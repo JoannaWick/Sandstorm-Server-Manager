@@ -656,11 +656,14 @@ try {
                             }
                             else
                             {
-                                $LiveConnections[$Server.Name][$UniqueId] = @{
-                                    PlayerName = $displayName
-                                    IP         = $playerIp
-                                    Score      = $playerScore
-                                    LoginTime  = [DateTime]::Now
+                                if($playerScore -eq 0)
+                                {
+                                    $LiveConnections[$Server.Name][$UniqueId] = @{
+                                        PlayerName = $displayName
+                                        IP         = $playerIp
+                                        Score      = $playerScore
+                                        LoginTime  = [DateTime]::Now
+                                    }
                                 }
                             }
 
@@ -801,7 +804,83 @@ try {
                     }
             
                     # Check for UNetConnection Close and match Player ID.  Save player data to PlayerLogs DB
+                    elseif ($Line -match "LogNet: UNetConnection::Cleanup:.*RemoteAddr:\s*(?:\[::ffff:)?(?<IPPort>[^,\]\s]+).*UniqueId:\s*(?<UID>\S+)") 
+                    {
+                        $RemoteAddr = ($Matches['IPPort'].Trim() -split ':')[0]
+                        $UniqueId = $Matches['UID'].Trim()
+
+                        # Clean off any potential trailing commas or formatting brackets
+                        $UniqueId = $UniqueId -replace '[,\}\]]', ''
+                            
+                        if ($UniqueId -ne "INVALID")
+                        {
+#                            if ($LiveConnections[$Server.Name].Keys -contains $UniqueId) {
+                                if ($LiveConnections -and 
+                                    $LiveConnections.ContainsKey($Server.Name) -and 
+                                    $LiveConnections[$Server.Name].ContainsKey($UniqueId)) {
+                                    $playerInformation = $LiveConnections[$Server.Name][$UniqueId]
+
+                                    $CurrentTime = [DateTime]::Now
+                                    $PlayTime = $CurrentTime - $playerInformation.LoginTime
+                                    $DurationStr = "{0:d2}:{1:d2}:{2:d2}" -f [int]$PlayTime.TotalHours, $PlayTime.Minutes, $PlayTime.Seconds
+                                                
+                                    $MatchEndedPayload = @{
+                                        NetworkID    = $UniqueId
+                                        Name         = $playerInformation.PlayerName
+                                        LastPlayed   = $playerInformation.LoginTime
+                                        Duration     = $DurationStr
+                                        LastServer   = $Info.ServerName
+                                        LastServerID = $Server.Name
+                                        Ip           = $RemoteAddr
+                                        Score        = $playerInformation.Score
+                                    }
+                                    $null = Add-PlayerSessionLog -Database $global:SandstormDB -SessionData $MatchEndedPayload
+
+                                    $LiveConnections[$Server.Name].Remove($UniqueId)
+                            }
+#                            }
+                        }
+                    }
+                    # Check for UNetConnection Close and match Player ID.  Save player data to PlayerLogs DB
                     elseif ($Line -match "LogNet: UNetConnection::Close:.*RemoteAddr:\s*(?:\[::ffff:)?(?<IPPort>[^,\]\s]+).*UniqueId:\s*(?<UID>\S+)") 
+                    {
+                        $RemoteAddr = ($Matches['IPPort'].Trim() -split ':')[0]
+                        $UniqueId = $Matches['UID'].Trim()
+
+                        # Clean off any potential trailing commas or formatting brackets
+                        $UniqueId = $UniqueId -replace '[,\}\]]', ''
+                            
+                        if ($UniqueId -ne "INVALID")
+                        {
+#                            if ($LiveConnections[$Server.Name].Keys -contains $UniqueId) {
+                                if ($LiveConnections -and 
+                                    $LiveConnections.ContainsKey($Server.Name) -and 
+                                    $LiveConnections[$Server.Name].ContainsKey($UniqueId)) {
+                                    $playerInformation = $LiveConnections[$Server.Name][$UniqueId]
+
+                                    $CurrentTime = [DateTime]::Now
+                                    $PlayTime = $CurrentTime - $playerInformation.LoginTime
+                                    $DurationStr = "{0:d2}:{1:d2}:{2:d2}" -f [int]$PlayTime.TotalHours, $PlayTime.Minutes, $PlayTime.Seconds
+                                                
+                                    $MatchEndedPayload = @{
+                                        NetworkID    = $UniqueId
+                                        Name         = $playerInformation.PlayerName
+                                        LastPlayed   = $playerInformation.LoginTime
+                                        Duration     = $DurationStr
+                                        LastServer   = $Info.ServerName
+                                        LastServerID = $Server.Name
+                                        Ip           = $RemoteAddr
+                                        Score        = $playerInformation.Score
+                                    }
+                                    $null = Add-PlayerSessionLog -Database $global:SandstormDB -SessionData $MatchEndedPayload
+
+                                    $LiveConnections[$Server.Name].Remove($UniqueId)
+                            }
+#                            }
+                        }
+                    }
+#                   # Check for UNetConnection Close and match Player ID.  Save player data to PlayerLogs DB
+                    elseif ($Line -match "LogNet: Error: UEngine::BroadcastNetworkFailure:.*RemoteAddr:\s*(?:\[::ffff:)?(?<IPPort>[^,\]\s]+).*UniqueId:\s*(?<UID>\S+)") 
                     {
                         $RemoteAddr = ($Matches['IPPort'].Trim() -split ':')[0]
                         $UniqueId = $Matches['UID'].Trim()
