@@ -1,7 +1,7 @@
 # Sandstorm Server Manager
 ## Created for Insurgency Sandstorm 1.21 by Joanna Wick
-### Version: 1.1.1
-### Date: 2026-10-25
+### Version: 2.0.0
+### Date: 2026-10-29
 
 This package can Install/Add one or more Insurgency Sandstorm Server without the need to use Virtual Machines. It will keep mods updated, monitor players and restart downed servers automatically.
 
@@ -113,6 +113,22 @@ Provide step-by-step instructions on how to install and run your distribution.
 
 Change Log
 ==========
+2.0.0 (2026-10-29)
+
+    1. [CHANGED] Complete rewrite of the Server_Manager.ps1 to accommodate using a GUI interface.
+    2. [CHANGED] .bat files have pauses removed except for the Admin Mode Required message.  Users were clickin on the X close button on the window instead of pressing enter and aborting the rest of the install checks for first run.
+    3. [CHANGED] Server Launcher: Upped boot Wait Time from 30 to 35 seconds.  Servers would sometimes do purges and compaction on launch causing there to a much longer delay before the server fully booted.  This could cause the user.json to not be stored properly if updated.
+    4. [FIXED] Server Manager: When editing GameStatsToken it would not save.  The Token did save on Install or Import but changing it later would not save.
+    5. [FIXED] Server Manager: Window Title for the Map Cycle Editor claimed it was the Boot Maps Editor.
+    6. [FIXED] startSandstormServer.bat: Deleting the contents of the bootmaps.txt will now cause the server to boot with the startscenario map in the ServerStartup.json instead of a random map.  You can edit the ServerStartup.json for each server manually to set the map.  Do not delete the bootmaps.txt file.
+    7. [FIXED] Server Launcher: All .check files are deleted when the server completely finishes booting.  Do not close any server window while servers are booting.  This can cause .check files to stick around causing a server to boot more than once.  Let all servers finish booting. 
+    8. [FIXED] Logic error in building Allmods list for Unsubscribe/Delete.  It was allowing the deletion of mods used by other servers.
+    9. [FIXED] Server Launcher: If more than one server ServerStartup.json could be corrupted if there was an exceedinglt long boot time for a server.
+    10. [FIXED] Server Launcher: user.json backups were not being created and naming convention was changed for more clarity
+    11. [FIXED] Server Info Monitor: Log out times were using current time instead of the calculated localtime from the logs.  This would give wildly large online times when the logs were scanned and put into the database an very rare occassions.
+    12. [FIXED] Server Info Monitor: Login Match phrase was incorrect so scanning the log stream would miss mod logins and would rely on the back Rcon login detection.  This would miss players logging in if the server had more than 50 bots.
+    13. [FIXED] Server Info Monitor: When a player entry was updated instead of inserted in the PlayerLogs it would be deleted because of a malformed _ID.  So players would be removed from the logs and never show on the Analytics.  This would occur on all still running servers if only one server was rebooted.
+
 
 1.1.1 (2026-10-25)
 
