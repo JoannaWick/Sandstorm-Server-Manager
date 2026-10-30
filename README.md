@@ -37,7 +37,7 @@ Watch the Sandstorm Manager 2.0 Install New Server Video (Click Image to view)
 
 Watch theSandstorm Manager 2.0 Import Existing Server (Click Image to view)
 
-[![Watch the Sandstorm Manager 2.0 Import Existing Server Video](https://img.youtube.com/vi/N59Fhv_-2Ks/0.jpg)](https://www.youtube.com/watch?v=N59Fhv_-2Ks)
+[![Watch the Sandstorm Manager 2.0 Import Existing Server Video](https://img.youtube.com/vi/Xy_gwg44afI/0.jpg)](https://www.youtube.com/watch?v=Xy_gwg44afI)
 
 Watch the Sandstorm Manager 2.0 Taskbar Video (Click Image to view)
 
@@ -45,7 +45,7 @@ Watch the Sandstorm Manager 2.0 Taskbar Video (Click Image to view)
 
 Watch the Sandstorm Manager 2.0 Other Selections Video (Click Image to view)
 
-[![Watch the Sandstorm Manager 2.0 Other Selections Video](https://img.youtube.com/vi/rDycwelK0tw/0.jpg)](https://www.youtube.com/watch?v=rDycwelK0tw)
+[![Watch the Sandstorm Manager 2.0 Other Selections Video](https://img.youtube.com/vi/1n-Wy0KDhpQ/0.jpg)](https://www.youtube.com/watch?v=1n-Wy0KDhpQ)
 
 Watch the Sandstorm Manager 2.0 Reboot Countdown Video (Click Image to view)
 
