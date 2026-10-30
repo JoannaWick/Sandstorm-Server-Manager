@@ -29,11 +29,11 @@ You can Ctrl+Click or Cmd+Click to open video in a new tab
 
 Watch the Sandstorm Server Manager 2.0 First Run Video (Click Image to view)
 
-[![Watch the Sandstorm Server 2.0 Manager First Run Video](https://img.youtube.com/vi/xYBcZUzaKzs/0.jpg)](https://www.youtube.com/watch?v=xYBcZUzaKzs)
+[![Watch the Sandstorm Server 2.0 Manager First Run Video](https://img.youtube.com/vi/iVBxOqi7fGA/0.jpg)](https://www.youtube.com/watch?v=iVBxOqi7fGA)
 
 Watch the Sandstorm Manager 2.0 Install New Server Video (Click Image to view)
 
-[![Watch the Sandstorm Manager 2.0 Install New Server Video](https://img.youtube.com/vi/Ub1nKeVgjBg/0.jpg)](https://www.youtube.com/watch?v=Ub1nKeVgjBg)
+[![Watch the Sandstorm Manager 2.0 Install New Server Video](https://img.youtube.com/vi/D3TFGQpSBZQ/0.jpg)](https://www.youtube.com/watch?v=D3TFGQpSBZQ)
 
 Watch theSandstorm Manager 2.0 Import Existing Server (Click Image to view)
 
@@ -41,7 +41,7 @@ Watch theSandstorm Manager 2.0 Import Existing Server (Click Image to view)
 
 Watch the Sandstorm Manager 2.0 Taskbar Video (Click Image to view)
 
-[![Watch the Sandstorm Manager 2.0 Taskbar Video](https://img.youtube.com/vi/rs4zWuSRro8/0.jpg)](https://www.youtube.com/watch?v=rs4zWuSRro8)
+[![Watch the Sandstorm Manager 2.0 Taskbar Video](https://img.youtube.com/vi/D1q_aK_XxTw/0.jpg)](https://www.youtube.com/watch?v=D1q_aK_XxTw)
 
 Watch the Sandstorm Manager 2.0 Other Selections Video (Click Image to view)
 
