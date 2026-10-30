@@ -1,5 +1,5 @@
 # Sandstorm Server Manager
-## Created for Insurgency Sandstorm 1.21 by Joanna Wick
+## Created for Insurgency Sandstorm 1.21+ by Joanna Wick
 ### Version: 2.0.0
 ### Date: 2026-10-29
 
