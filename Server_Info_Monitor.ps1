@@ -837,13 +837,13 @@ try {
 
                         # 5. Local Login Time
                         $Timestamp = $DateTime.AddHours($currentOffset.Hours)
-
+<#
                         Write-Host "[$Timestamp] [LOGIN ENTRY]" -ForegroundColor Cyan
                         Write-Host "  Name:     " -NoNewline; Write-Host $PlayerName -ForegroundColor Green
                         Write-Host "  ServerID: " -NoNewline; Write-Host $server.Name -ForegroundColor Green
                         Write-Host "  UserID:   " -NoNewline; Write-Host $UserID -ForegroundColor Yellow
                         Write-Host "--------------------------------------------------------" -ForegroundColor Gray
-
+#>
                         $LiveConnections[$Server.Name][$UserID] = @{
                             PlayerName = $PlayerName
                             IP         = "0.0.0.0"
@@ -904,14 +904,14 @@ try {
                                             Score        = $playerInformation.Score
                                         }
                                         $playerDataDisp = Add-PlayerSessionLog -Database $global:SandstormDB -SessionData $MatchEndedPayload
-
+<#
                                         Write-Host ($playerDataDisp | Out-String) -ForegroundColor Cyan
                                         Write-Host "[$Timestamp] LogNet: UChannel::Close" -ForegroundColor Cyan
                                         Write-Host "  Name:     " -NoNewline; Write-Host $playerInformation.PlayerName -ForegroundColor Green
                                         Write-Host "  ServerID: " -NoNewline; Write-Host $server.Name -ForegroundColor Green
                                         Write-Host "  UserID:   " -NoNewline; Write-Host $UniqueId -ForegroundColor Yellow
                                         Write-Host "--------------------------------------------------------" -ForegroundColor Gray
-
+#>
                                         $LiveConnections[$Server.Name].Remove($UniqueId)
                                     }
 #                                }
@@ -969,14 +969,14 @@ try {
                                         Score        = $playerInformation.Score
                                     }
                                     $playerDataDisp = Add-PlayerSessionLog -Database $global:SandstormDB -SessionData $MatchEndedPayload
-
+<#
                                     Write-Host ($playerDataDisp | Out-String) -ForegroundColor Cyan
                                     Write-Host "[$Timestamp] LogNet: Error: UEngine::BroadcastNetworkFailure" -ForegroundColor Cyan
                                     Write-Host "  Name:     " -NoNewline; Write-Host $playerInformation.PlayerName -ForegroundColor Green
                                     Write-Host "  ServerID: " -NoNewline; Write-Host $server.Name -ForegroundColor Green
                                     Write-Host "  UserID:   " -NoNewline; Write-Host $UniqueId -ForegroundColor Yellow
                                     Write-Host "--------------------------------------------------------" -ForegroundColor Gray
-
+#>
                                     $LiveConnections[$Server.Name].Remove($UniqueId)
                             }
 #                            }
