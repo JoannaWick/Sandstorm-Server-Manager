@@ -407,13 +407,13 @@ function Start-TaskProcessor {
                 $LoopCounter = 0
 
                 # Initialize countdown tracking variables before the loop
-                $TotalSeconds = 45
+                $TotalSeconds = 35
                 $StartTime = Get-Date
 
                 # Define an array of bright, readable console colors (avoiding dark black/blue)
                 $ConsoleColors = "Cyan", "Green", "Yellow", "Magenta", "White", "Gray"
 
-                while ($LoopCounter -lt 45) {
+                while ($LoopCounter -lt 35) {
                     $LoopCounter++
 
                     # Calculate and display remaining seconds on the exact same line
@@ -422,7 +422,7 @@ function Start-TaskProcessor {
                     $RandomColor = $ConsoleColors | Get-Random
                     Write-Host "`r$serverTitle Server Boot: ${SecondsRemaining}s remaining   " -NoNewline -ForegroundColor $RandomColor
 
-                    if ($LoopCounter -lt 45) {
+                    if ($LoopCounter -lt 35) {
                         Start-Sleep -Seconds 1
                     }
                 }
