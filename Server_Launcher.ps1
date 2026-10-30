@@ -1,6 +1,5 @@
 <#PSScriptInfo
 .NAME Server_Launcher
-.VERSION 1.0.0
 .AUTHOR Joanna Wick
 .TAGS Sandstorm, Mods
 .PROJECTURI https://github.com/JoannaWick/Sandstorm-Server-Manager
@@ -8,7 +7,7 @@
 
 $Host.UI.RawUI.WindowTitle = "Sandstorm_Multi_Server"
 
-$Version = "1.0.0"
+$Version = "2.0.0"
 
 Write-Host "==============================================" -ForegroundColor Cyan
 Write-Host "        Sandstorm Multi Server Launcher       " -ForegroundColor Yellow
@@ -348,16 +347,19 @@ function Start-TaskProcessor {
 
                 Start-Process "cmd.exe" -ArgumentList "/c TITLE $processName && CALL $updateFile", "$serverTitle" -WorkingDirectory "$PSScriptRootDir" -Wait
 
+                # copy mod.io.$ServerTitle data to mod.io
+                # copy mod.io.$ServerTitle data to mod.io
+                $SourceServerDir = "$env:LOCALAPPDATA\mod.io.$serverTitle\254\ModServer"
+                $TargetModioDir  = "$env:LOCALAPPDATA\mod.io\254\ModServer"
+
+                # Robocopy syntax: robocopy "SourceFolder" "TargetFolder" "FileName" [Switches]
+                robocopy "$SourceServerDir" "$TargetModioDir" "user.json" /IS /IT /R:1 /W:1 | Out-Null
+
                 $SourceServerDir = "$env:LOCALAPPDATA\mod.io.$serverTitle"
                 $TargetModioDir  = "$env:LOCALAPPDATA\mod.io"
 
-                if (Test-Path -Path $TargetModioDir) {
-                    Remove-Item -Path $TargetModioDir -Recurse -Force *>$null
-                }
-
-                if (Test-Path -Path $SourceServerDir) {
-                    robocopy "$SourceServerDir" "$TargetModioDir" /E /IS | Out-Null
-                }
+                # Robocopy syntax: robocopy "SourceFolder" "TargetFolder" "FileName" [Switches]
+                robocopy "$SourceServerDir" "$TargetModioDir" "globalsettings.json" /IS /IT /R:1 /W:1 | Out-Null
 
                 # Copy config\ServerData\$serverTitle\ServerStartup.json file to InsurgencySandstorm\steamapps\common\sandstorm_server
 
@@ -405,14 +407,13 @@ function Start-TaskProcessor {
                 $LoopCounter = 0
 
                 # Initialize countdown tracking variables before the loop
-                $TotalSeconds = 30
+                $TotalSeconds = 45
                 $StartTime = Get-Date
 
                 # Define an array of bright, readable console colors (avoiding dark black/blue)
                 $ConsoleColors = "Cyan", "Green", "Yellow", "Magenta", "White", "Gray"
 
-                # Check Loop (Up to 30 times)
-                while ($LoopCounter -lt 30) {
+                while ($LoopCounter -lt 45) {
                     $LoopCounter++
 
                     # Calculate and display remaining seconds on the exact same line
@@ -421,8 +422,7 @@ function Start-TaskProcessor {
                     $RandomColor = $ConsoleColors | Get-Random
                     Write-Host "`r$serverTitle Server Boot: ${SecondsRemaining}s remaining   " -NoNewline -ForegroundColor $RandomColor
 
-                    # Only sleep if we haven't reached the 30th check yet
-                    if ($LoopCounter -lt 30) {
+                    if ($LoopCounter -lt 45) {
                         Start-Sleep -Seconds 1
                     }
                 }
@@ -431,18 +431,20 @@ function Start-TaskProcessor {
                 $RenameUserJson = Join-Path -Path "$env:LOCALAPPDATA" -ChildPath "mod.io.$serverTitle\254\ModServer\user.json"
                 # rename original user.json
 
-                Rename-Item -Path "$RenameUserJson" -NewName ("user_{0:yyyyMMdd_HHmmss}.json" -f (Get-Date))
+                Rename-Item -Path "$RenameUserJson" -NewName ("user_{0:yyyy-MM-dd_HH-mm-ss}.json" -f (Get-Date))
 
-                $SourceServerDir = "$env:LOCALAPPDATA\mod.io.$serverTitle"
-                $TargetModioDir  = "$env:LOCALAPPDATA\mod.io"
-                # Mirror back to the server directory at the end
-                robocopy "$TargetModioDir" "$SourceServerDir" /E /IS | Out-Null
+                # mod.io to copy mod.io.$ServerTitle
+                $SourceServerDir  = "$env:LOCALAPPDATA\mod.io\254\ModServer"
+                $TargetModioDir = "$env:LOCALAPPDATA\mod.io.$serverTitle\254\ModServer"
+
+                # Robocopy syntax: robocopy "SourceFolder" "TargetFolder" "FileName" [Switches]
+                robocopy "$SourceServerDir" "$TargetModioDir" "user.json" /IS /IT /R:1 /W:1 | Out-Null
 
                 $cleanupPath = Join-Path -Path "$env:LOCALAPPDATA" -ChildPath "mod.io.$serverTitle\254\ModServer"
                 Get-ChildItem -Path "$cleanupPath" -File | Sort-Object LastWriteTime -Descending | Select-Object -Skip 12 | Remove-Item -Force
 
                 # Define the new title you want for your Insurgency server log window
-                $NewTitle = "Insurgency: Sandstorm - $serverTitle"
+                $NewTitle = "$serverTitle - Insurgency: Sandstorm"
 
                 # Inject the Windows API function needed to change external window titles
                 Add-Type -TypeDefinition @"
@@ -454,27 +456,27 @@ public static class Win32 {
 }
 "@
 
+                $Attempts = 0
+                $MaxAttempts = 10
+
                 $ServerProcess = Get-Process -Name "*InsurgencyServer-Win64-Shipping*" -ErrorAction SilentlyContinue | 
                      Sort-Object -Property StartTime -Descending | 
                     Select-Object -First 1
 
-                if ($ServerProcess) {
-                    # Check if the most recent process has a visible window handle
-                    if ($ServerProcess.MainWindowHandle -ne [IntPtr]::Zero) {
-                        [void][Win32]::SetWindowText($ServerProcess.MainWindowHandle, $NewTitle)
-#                        Write-Host "Successfully renamed the most recent log window to: $NewTitle" -ForegroundColor Green
-                    } else {
-                        Write-Warning "Most recent server process found (ID: $($ServerProcess.Id)), but its window handle isn't ready yet."
-                    }
-                } else {
-                    Write-Error "No Insurgency Sandstorm server processes are currently running."
+                while ($ServerProcess.MainWindowHandle -eq [IntPtr]::Zero -and $Attempts -lt $MaxAttempts) {
+                    Start-Sleep -Milliseconds 500  # Total wait time will be ~5 seconds (500ms * 10)
+
+                    $ServerProcess = Get-Process -Name "*InsurgencyServer-Win64-Shipping*" -ErrorAction SilentlyContinue | 
+                        Sort-Object -Property StartTime -Descending | 
+                        Select-Object -First 1
+
+                    $Attempts++
                 }
 
-                # Copy config\ServerData\$serverTitle\ServerStartup.json file to InsurgencySandstorm\steamapps\common\sandstorm_server
-
-                $sourceDir = Join-Path -Path $PSScriptRootDir -ChildPath "InsurgencySandstorm\steamapps\common\sandstorm_server"
-                $destinationDir = Join-Path -Path $PSScriptRootDir -ChildPath "config\ServerData\$serverTitle"
-                robocopy "$sourceDir" "$destinationDir" "ServerStartup.json" /IS | Out-Null
+                if ($ServerProcess.MainWindowHandle -ne [IntPtr]::Zero) {
+                     [void][Win32]::SetWindowText($ServerProcess.MainWindowHandle, $NewTitle)
+#                    Write-Host "Successfully renamed the most recent log window to: $NewTitle (Took $Attempts attempts)" -ForegroundColor Green
+                } 
             }
             Receive-Job -Job $Job -Wait -AutoRemoveJob
 
@@ -714,6 +716,9 @@ for ($i = 0; $i -lt $ServerInstances.Count; $i++) {
 
 if(-not $serverfailed)
 {
+    $removeCheck = Join-Path -Path $PSScriptRoot -ChildPath "config\*.check"
+    Remove-Item -Path $removeCheck -Force -ErrorAction SilentlyContinue
+
     $scriptTitle = "Start_Server_Info_Monitor"
     $batchFilename = "Start_Server_Info_Monitor.bat"
 

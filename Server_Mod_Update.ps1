@@ -1,6 +1,5 @@
 <#PSScriptInfo
 .NAME Server_Mod_Update
-.VERSION 1.1.3
 .AUTHOR Joanna Wick
 .TAGS Sandstorm, Mods
 .PROJECTURI https://github.com/JoannaWick/Sandstorm-Server-Manager

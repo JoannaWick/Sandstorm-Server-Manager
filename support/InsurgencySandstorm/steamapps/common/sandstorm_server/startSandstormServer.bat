@@ -133,6 +133,18 @@ call echo Selected Scenario number %_rand% out of %n% Scenarios
 
 call set MoveTo=%%bootmaparray[%_rand%]%%
 
+:: 1. Strip spaces
+set "MoveTo=%MoveTo: =%"
+
+:: 2. Strip Carriage Returns (CR) and Line Feeds (LF)
+for /f "delims=" %%A in ("%MoveTo%") do set "MoveTo=%%A"
+
+if "%MoveTo%"=="" set MoveTo=%startscenario%
+
+call set "defaultmap=?Scenario=?Game=?Lighting=?Mutators="
+
+if "%MoveTo%"=="%defaultmap%" set MoveTo=%startscenario%
+
 call echo.
 call echo "ModDownloadTravelTo = %MoveTo%"
 call echo.

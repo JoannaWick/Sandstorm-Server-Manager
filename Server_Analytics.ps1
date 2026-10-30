@@ -1,6 +1,5 @@
 ﻿<#PSScriptInfo
 .NAME Server_Analytics
-.VERSION 1.0.0
 .AUTHOR Joanna Wick
 .TAGS Sandstorm, Mods
 .PROJECTURI https://github.com/JoannaWick/Sandstorm-Server-Manager
@@ -1385,6 +1384,7 @@ function Get-RecentPlayerLog {
             # Ensure index fields exist to make 'OrderBy' queries instantaneous
             $col.EnsureIndex("LastPlayed")
             $cutoffDate = [DateTime]::Now.AddHours(-24)
+
             $results = $col.Query().Where("LastPlayed >= @0", $cutoffDate).OrderByDescending("LastPlayed").ToEnumerable()
 
             # Output or process the logs
@@ -1754,6 +1754,7 @@ $MostRecentPlayers = Get-RecentPlayerLog -Database $global:SandstormDB
 $mostRecentData = @()
 foreach ($player in $MostRecentPlayers) 
 {
+Write-Host ($player | Out-String) -ForegroundColor Cyan
     if($player.ID -ne $null)
     {
         $globalPlayerDatabase[$player.ID] = $player

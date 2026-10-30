@@ -11,5 +11,5 @@
     "GameStatsToken":  "",
     "GSLTToken":  "",
     "Mutators":  "",
-    "startscenario":  "farmhouse?Scenario=Scenario_Farmhouse_Checkpoint_Security"
+    "startscenario":  "Farmhouse?Scenario=Scenario_Farmhouse_Checkpoint_Security"
 }

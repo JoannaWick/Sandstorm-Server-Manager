@@ -75,8 +75,6 @@ IF EXIST "%DEST_DIR%\%FILE_NAME%" (
     )
 )
 
-pause
-
 :LaunchGame
 
 Powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Server_Manager.ps1" -batchLaunch "1"

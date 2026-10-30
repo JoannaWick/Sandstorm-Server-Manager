@@ -1,6 +1,5 @@
 <#PSScriptInfo
 .NAME Server_Taskbar
-.VERSION 1.1.1
 .AUTHOR Joanna Wick
 .TAGS Sandstorm, Mods
 .PROJECTURI https://github.com/JoannaWick/Sandstorm-Server-Manager
@@ -367,7 +366,7 @@ function show-Menu
     [void]$form.ShowDialog()
 }
 
-$version = "1.1.1"
+$version = "2.0.0"
 
 # About Server Manager
 
@@ -377,7 +376,7 @@ Add-MenuButton " About " {
 
     # Define the window properties
     $Title = "Sandstorm Server Launcher"
-    $Message = "Script Version: $version (2026-08-20)`nAuthor: Joanna Wick (Sandy D)`n`nSandstorm Server Manager for Windows`n`nServer Manager: Create, Import and Manage multiple servers`n`nServer Launcher: Launch, Monitor and Schedule Reboot Multiple Servers`n`nServer Info Monitor: Server Dashboard for displaying all players on each server (Player Name, ID, Score and Time on Server`n`nServer Analytics: Server Anaylitics Dashboard diplaying Last 7 Days and Hourly uniquie players, Players for the last 24 Hours on all servers combined, Top 10 Players per server with most time online and Player Search`n`nRcon Dashboard: Full control of all servers through one Dashboard with all Sandstorm Rcon commands supported.  Each server's MapCycle is used for Travel and Travel Scenario commands.`n`nServer Taskbar: Easy access to all Sandstorm Server Manager Controls"
+    $Message = "Script Version: $version (2026-08-28)`nAuthor: Joanna Wick (Sandy D)`n`nSandstorm Server Manager for Windows`n`nServer Manager: Create, Import and Manage multiple servers`n`nServer Launcher: Launch, Monitor and Schedule Reboot Multiple Servers`n`nServer Info Monitor: Server Dashboard for displaying all players on each server (Player Name, ID, Score and Time on Server`n`nServer Analytics: Server Anaylitics Dashboard diplaying Last 7 Days and Hourly uniquie players, Players for the last 24 Hours on all servers combined, Top 10 Players per server with most time online and Player Search`n`nRcon Dashboard: Full control of all servers through one Dashboard with all Sandstorm Rcon commands supported.  Each server's MapCycle is used for Travel and Travel Scenario commands.`n`nServer Taskbar: Easy access to all Sandstorm Server Manager Controls"
     $Buttons = [System.Windows.MessageBoxButton]::OK
     $Icon = [System.Windows.MessageBoxImage]::Information
 
@@ -1181,8 +1180,14 @@ Add-MenuButton "Rcon Dashboard" {
 
 # Open the Server Manager
 
+# Lock the folder path to a clean string variable
+$targetDir = $thisScriptRoot
+
+# Build the absolute path to your batch file
+$batPath = Join-Path -Path $targetDir -ChildPath "Start_Server_Manager.bat"
+
 Add-MenuButton "Server Manager" {
-    Start-Process -FilePath "cmd.exe" -ArgumentList '/c Start_Server_Manager.bat'
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$batPath`"" -WorkingDirectory $targetDir -Verb RunAs
 }.GetNewClosure()
 
 # Open Windows Task Manager

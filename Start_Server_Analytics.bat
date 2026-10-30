@@ -74,8 +74,6 @@ IF EXIST "%DEST_DIR%\%FILE_NAME%" (
     )
 )
 
-pause
-
 :LaunchGame
 
 Powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Server_Analytics.ps1"

@@ -74,8 +74,6 @@ IF EXIST "%DEST_DIR%\%FILE_NAME%" (
     )
 )
 
-pause
-
 :LaunchGame
 
 Powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0Server_Info_Monitor.ps1' -infoMonitorPosition '%*'"

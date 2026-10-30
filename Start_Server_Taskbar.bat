@@ -75,8 +75,6 @@ IF EXIST "%DEST_DIR%\%FILE_NAME%" (
     )
 )
 
-pause
-
 :LaunchGame
 
 Powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0Server_Taskbar.ps1' -serverOverrideButtons '%*'"
