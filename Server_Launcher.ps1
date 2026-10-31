@@ -346,8 +346,6 @@ function Start-TaskProcessor {
                 $updateFile = "Start_Server_Mod_Update.bat"
 
                 Start-Process "cmd.exe" -ArgumentList "/c TITLE $processName && CALL $updateFile", "$serverTitle" -WorkingDirectory "$PSScriptRootDir" -Wait
-
-                # copy mod.io.$ServerTitle data to mod.io
                 # copy mod.io.$ServerTitle data to mod.io
                 $SourceServerDir = "$env:LOCALAPPDATA\mod.io.$serverTitle\254\ModServer"
                 $TargetModioDir  = "$env:LOCALAPPDATA\mod.io\254\ModServer"
@@ -477,6 +475,12 @@ public static class Win32 {
                      [void][Win32]::SetWindowText($ServerProcess.MainWindowHandle, $NewTitle)
 #                    Write-Host "Successfully renamed the most recent log window to: $NewTitle (Took $Attempts attempts)" -ForegroundColor Green
                 } 
+
+                # Copy InsurgencySandstorm\steamapps\common\sandstorm_server\ServerStartup.json file to config\ServerData\$serverTitle
+
+                $sourceDir = Join-Path -Path $PSScriptRootDir -ChildPath "InsurgencySandstorm\steamapps\common\sandstorm_server"
+                $destinationDir = Join-Path -Path $PSScriptRootDir -ChildPath "config\ServerData\$serverTitle"
+                robocopy "$sourceDir" "$destinationDir" "ServerStartup.json" /IS | Out-Null
             }
             Receive-Job -Job $Job -Wait -AutoRemoveJob
 

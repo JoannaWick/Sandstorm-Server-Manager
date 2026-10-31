@@ -1540,6 +1540,10 @@ function install_server
             }
         }
 
+        # kill running Sandstorm Server after user.json created and saved
+
+        Stop-Process -Name "InsurgencyServer-Win64-Shipping" -Force
+
         # Mirror/Overwrite server mod.io.$Base_Server_ID to mod.io directory
         $ModioDir  = "$env:LOCALAPPDATA\mod.io"
         $ModioServerDir = "$env:LOCALAPPDATA\mod.io.$Base_Server_ID"
@@ -1632,6 +1636,12 @@ function install_server
         $ModioDir  = "$env:LOCALAPPDATA\mod.io"
         $ModioServerDir = "$env:LOCALAPPDATA\mod.io.$Base_Server_ID"
         robocopy "$ModioDir" "$ModioServerDir" /E /IS | Out-Null
+
+        # Copy InsurgencySandstorm\steamapps\common\sandstorm_server\ServerStartup.json file to config\ServerData\$Base_Server_ID
+
+        $sourceDir = Join-Path -Path $PSScriptRootDir -ChildPath "InsurgencySandstorm\steamapps\common\sandstorm_server"
+        $destinationDir = Join-Path -Path $PSScriptRootDir -ChildPath "config\ServerData\$Base_Server_ID"
+        robocopy "$sourceDir" "$destinationDir" "ServerStartup.json" /IS | Out-Null
 
         # kill running Sandstorm Server after user.json created and saved
 
