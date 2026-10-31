@@ -1,7 +1,7 @@
 # Sandstorm Server Manager
 ## Created for Insurgency Sandstorm 1.21+ by Joanna Wick
-### Version: 2.0.0
-### Date: 2026-10-29
+### Version: 2.0.1
+### Date: 2026-10-31
 
 This package can Install/Add one or more Insurgency Sandstorm Server without the need to use Virtual Machines. It will keep mods updated, monitor players and restart downed servers automatically.
 
@@ -101,6 +101,11 @@ Provide step-by-step instructions on how to install and run your distribution.
 
 Change Log
 ==========
+2.0.1 (2026-10-31)
+
+    1. [FIXED] Server Launcher: Boot Loop issue when creating a new or importing a server.
+    2. [FIXED] All servers will be stopped when importing or creating a new server to prevent issues with the other servers.
+
 2.0.0 (2026-10-29)
 
     1. [CHANGED] Complete rewrite of the Server_Manager.ps1 to accommodate using a GUI interface.
