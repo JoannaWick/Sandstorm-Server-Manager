@@ -7,11 +7,14 @@
 
 $Host.UI.RawUI.WindowTitle = "Sandstorm_Multi_Server"
 
-$Version = "2.0.0"
+$VersionConfigPath = Join-Path -Path $PSScriptRoot -ChildPath "config\Version.json"
+$VersionConfig=Get-Content $VersionConfigPath -Raw | ConvertFrom-Json
+$Version = $VersionConfig.Version
+$ReleaseDate = $VersionConfig.ReleaseDate
 
 Write-Host "==============================================" -ForegroundColor Cyan
 Write-Host "        Sandstorm Multi Server Launcher       " -ForegroundColor Yellow
-Write-Host "              Version: $Version               " -ForegroundColor DarkYellow
+Write-Host "          Version: $Version ($ReleaseDate)    " -ForegroundColor DarkYellow
 Write-Host "==============================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -33,8 +36,6 @@ foreach ($item in $ServerListData) {
         }
     }
 }
-
-$windows_to_move += 1
 
 $infoMonitor_to_move = $windows_to_move
 
@@ -143,7 +144,7 @@ public class Window {
     [void][Window]::MoveWindow($hWnd, $xPos, $yPos, $TileWidth, $TileHeight, $true)
 }
 
-$windows_to_move = 2
+$windows_to_move = 1
 
 function resize_windows {
     param
@@ -187,7 +188,7 @@ function resize_windows {
     $TileHeight = [Math]::Floor($ScreenHeight / $Rows)
 
     $start = 0
-    $True_Count = 2
+    $True_Count = 1
 
     $processes2 = Get-Process -Name InsurgencyServer-Win64-Shipping -ErrorAction SilentlyContinue | 
                      Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero } |
@@ -426,20 +427,30 @@ function Start-TaskProcessor {
                 }
                 Write-Host "`r                                                 `r" -NoNewline
 
-                $RenameUserJson = Join-Path -Path "$env:LOCALAPPDATA" -ChildPath "mod.io.$serverTitle\254\ModServer\user.json"
-                # rename original user.json
-
-                Rename-Item -Path "$RenameUserJson" -NewName ("user_{0:yyyy-MM-dd_HH-mm-ss}.json" -f (Get-Date))
-
-                # mod.io to copy mod.io.$ServerTitle
-                $SourceServerDir  = "$env:LOCALAPPDATA\mod.io\254\ModServer"
+                $SourceServerDir = "$env:LOCALAPPDATA\mod.io\254\ModServer"
                 $TargetModioDir = "$env:LOCALAPPDATA\mod.io.$serverTitle\254\ModServer"
 
-                # Robocopy syntax: robocopy "SourceFolder" "TargetFolder" "FileName" [Switches]
-                robocopy "$SourceServerDir" "$TargetModioDir" "user.json" /IS /IT /R:1 /W:1 | Out-Null
+                $SourceFile = Join-Path -Path $SourceServerDir -ChildPath "user.json"
+                $TargetFile = Join-Path -Path $TargetModioDir -ChildPath "user.json"
+
+                if ((Test-Path -Path $SourceFile) -and (Test-Path -Path $TargetFile)) {
+
+                    $SourceTime = (Get-Item -Path $SourceFile).LastWriteTime
+                    $TargetTime = (Get-Item -Path $TargetFile).LastWriteTime
+
+                    if ($SourceTime -gt $TargetTime) {
+                        Rename-Item -Path $TargetFile -NewName ("user_{0:yyyy-MM-dd_HH-mm-ss}.json" -f (Get-Date))
+                        robocopy "$SourceServerDir" "$TargetModioDir" "user.json" /IS /IT /R:1 /W:1 | Out-Null
+                    }
+                }
 
                 $cleanupPath = Join-Path -Path "$env:LOCALAPPDATA" -ChildPath "mod.io.$serverTitle\254\ModServer"
-                Get-ChildItem -Path "$cleanupPath" -File | Sort-Object LastWriteTime -Descending | Select-Object -Skip 12 | Remove-Item -Force
+
+                # Filter specifically for the backup pattern user_YYYY-MM-DD_HH-mm-ss.json
+                Get-ChildItem -Path "$cleanupPath" -File -Filter "user_????-??-??_??-??-??.json" | 
+                    Sort-Object LastWriteTime -Descending | 
+                    Select-Object -Skip 12 | 
+                    Remove-Item -Force
 
                 # Define the new title you want for your Insurgency server log window
                 $NewTitle = "$serverTitle - Insurgency: Sandstorm"

@@ -119,6 +119,8 @@ $clearButton.Margin = New-Object System.Windows.Thickness(0, 0, 2, 0) # Small of
 # Click logic to wipe text box and return cursor focus
 $clearButton.Add_Click({
     $searchBox.Text = ""
+    $activityListView.ItemsSource = $mostActiveData
+    $activeHeader.Text = "Top 10 Most Active Players by Server (Double-Click for Profile)"
     $searchBox.Focus() | Out-Null
 })
 $searchBarGrid.Children.Add($clearButton) | Out-Null
@@ -782,7 +784,7 @@ $ExecuteSearchFiltering = {
 }
 
 # Attach the real-time processing block directly to text string modifications
-$searchBox.Add_TextChanged($ExecuteSearchFiltering)
+#$searchBox.Add_TextChanged($ExecuteSearchFiltering)
 
 # Optional: Keep the search button clickable as a fallback interaction point
 $searchButton.Add_Click($ExecuteSearchFiltering)

@@ -11,7 +11,11 @@ param(
 
 $Host.UI.RawUI.WindowTitle = "Sandstorm Server Manager Console"
 
-$Version = "2.0.0"
+$VersionConfigPath = Join-Path -Path $PSScriptRoot -ChildPath "config\Version.json"
+$VersionConfig=Get-Content $VersionConfigPath -Raw | ConvertFrom-Json
+$Version = $VersionConfig.Version
+$ReleaseDate = $VersionConfig.ReleaseDate
+
 $global:selectedServerID = ""
 $global:selectedisDisabled = $false
 [int]$global:Server_List_Count = 0
@@ -4240,7 +4244,7 @@ function Show-Menu
     # Main Form Window Styling
     # ---------------------------------------------------------
     $Form = New-Object System.Windows.Forms.Form
-    $Form.Text = "Sandstorm Multi Server Manager v$Version"
+    $Form.Text = "Sandstorm Multi Server Manager $Version ($ReleaseDate)"
     $Form.Size = New-Object System.Drawing.Size(520, 905)
     $Form.StartPosition = "CenterScreen"
     $Form.FormBorderStyle = "FixedSingle"
@@ -4660,8 +4664,8 @@ if ($scheduledTimes.count -gt 0) { return "➡ " + ($rebootTimes -replace ' : $'
 $script:currentY += 40
 
 # Toggle [I]
-Create-ConfigButton -Prefix "Dashboard Windows:" -GetTextScript {
-if ($global:ManagerConfig.closeAllWindows -eq 0) { "➡ Leave Open After All Launched" } else { "➡ Minimize After All Launched" }
+Create-ConfigButton -Prefix "Dashboard Window:" -GetTextScript {
+if ($global:ManagerConfig.closeAllWindows -eq 0) { "➡ Leave Dashboard Open" } else { "➡ Minimize Dashboard" }
 } -ActionScript {
 if ($global:ManagerConfig.closeAllWindows -eq 0) { $global:ManagerConfig.closeAllWindows = 1 } else { $global:ManagerConfig.closeAllWindows = 0 }
 $global:ManagerConfig | ConvertTo-Json -Depth 10 | Set-Content $ManagerConfigPath
@@ -4669,8 +4673,8 @@ $global:ManagerConfig | ConvertTo-Json -Depth 10 | Set-Content $ManagerConfigPat
 $script:currentY += 40
 
 # Toggle [W]
-Create-ConfigButton -Prefix "Server Windows:" -GetTextScript {
-if ($global:ManagerConfig.closeServerWindows -eq 0) { "➡ Leave Server Windows Open" } else { "➡ Minimized Server Windows" }
+Create-ConfigButton -Prefix "Server Logs:" -GetTextScript {
+if ($global:ManagerConfig.closeServerWindows -eq 0) { "➡ Leave Server Logs Open" } else { "➡ Minimized Server Logs" }
 } -ActionScript {
 if ($global:ManagerConfig.closeServerWindows -eq 0) { $global:ManagerConfig.closeServerWindows = 1 } else { $global:ManagerConfig.closeServerWindows = 0 }
 $global:ManagerConfig | ConvertTo-Json -Depth 10 | Set-Content $ManagerConfigPath

@@ -19,7 +19,6 @@ $closeAllWindows = $ManagerConfig.closeAllWindows
 $closeServerWindows = $ManagerConfig.closeServerWindows
 $closeTaskbar = $ManagerConfig.closeTaskbar
 
-
 # Run the Override GUI completely in the background
 $guiBlock = {
 param
@@ -231,6 +230,20 @@ function Add-MenuButton ($text, $action) {
 
     $buttonPanel.Controls.Add($btn)
 }
+
+# --- Helper Function: Add-MenuLabel ---
+function Add-MenuBar {
+    $lbl = New-Object System.Windows.Forms.Label
+    $lbl.ForeColor = [System.Drawing.Color]::FromArgb(33, 37, 41)         
+    $lbl.BackColor = [System.Drawing.Color]::FromArgb(186, 192, 198)     
+    $lbl.MinimumSize = New-Object System.Drawing.Size(2, 28)
+    $lbl.AutoSize = $true
+    # Adjusted padding to sit perfectly against the thinner line
+    $lbl.Margin = New-Object System.Windows.Forms.Padding(1, 2, 1, 2)
+    $lbl.TextAlign = [System.Drawing.ContentAlignment]::Middle
+    $buttonPanel.Controls.Add($lbl)
+}
+
 # Helper function to dynamically add a button
 function show-Menu 
 {
@@ -366,7 +379,10 @@ function show-Menu
     [void]$form.ShowDialog()
 }
 
-$version = "2.0.0"
+$VersionConfigPath = Join-Path -Path $thisScriptRoot -ChildPath "config\Version.json"
+$VersionConfig=Get-Content $VersionConfigPath -Raw | ConvertFrom-Json
+$Version = $VersionConfig.Version
+$ReleaseDate = $VersionConfig.ReleaseDate
 
 # About Server Manager
 
@@ -376,7 +392,7 @@ Add-MenuButton " About " {
 
     # Define the window properties
     $Title = "Sandstorm Server Launcher"
-    $Message = "Script Version: $version (2026-08-28)`nAuthor: Joanna Wick (Sandy D)`n`nSandstorm Server Manager for Windows`n`nServer Manager: Create, Import and Manage multiple servers`n`nServer Launcher: Launch, Monitor and Schedule Reboot Multiple Servers`n`nServer Info Monitor: Server Dashboard for displaying all players on each server (Player Name, ID, Score and Time on Server`n`nServer Analytics: Server Anaylitics Dashboard diplaying Last 7 Days and Hourly uniquie players, Players for the last 24 Hours on all servers combined, Top 10 Players per server with most time online and Player Search`n`nRcon Dashboard: Full control of all servers through one Dashboard with all Sandstorm Rcon commands supported.  Each server's MapCycle is used for Travel and Travel Scenario commands.`n`nServer Taskbar: Easy access to all Sandstorm Server Manager Controls"
+    $Message = "Script Version: $Version ($ReleaseDate)`nAuthor: Joanna Wick (Sandy D)`n`nSandstorm Server Manager for Windows`n`nServer Manager: Create, Import and Manage multiple servers`n`nServer Launcher: Launch, Monitor and Schedule Reboot Multiple Servers`n`nServer Info Monitor: Server Dashboard for displaying all players on each server (Player Name, ID, Score and Time on Server`n`nServer Analytics: Server Anaylitics Dashboard diplaying Last 7 Days and Hourly uniquie players, Players for the last 24 Hours on all servers combined, Top 10 Players per server with most time online and Player Search`n`nRcon Dashboard: Full control of all servers through one Dashboard with all Sandstorm Rcon commands supported.  Each server's MapCycle is used for Travel and Travel Scenario commands.`n`nServer Taskbar: Easy access to all Sandstorm Server Manager Controls"
     $Buttons = [System.Windows.MessageBoxButton]::OK
     $Icon = [System.Windows.MessageBoxImage]::Information
 
@@ -384,6 +400,290 @@ Add-MenuButton " About " {
     [System.Windows.MessageBox]::Show($Message, $Title, $Buttons, $Icon)
 }.GetNewClosure()
 
+Add-MenuBar
+
+# Minimize Dashboard Window
+
+if($closeAllWindows -ne 0)
+{
+    # Define the Windows API functions needed for true state detection
+    $WinAPICode = @"
+using System;
+using System.Runtime.InteropServices;
+
+public class WindowsAPI {
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+
+    public struct POINT {
+        public int X;
+        public int Y;
+    }
+
+    public struct RECT {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    public struct WINDOWPLACEMENT {
+        public int length;
+        public int flags;
+        public int showCmd;
+        public POINT ptMinPosition;
+        public POINT ptMaxPosition;
+        public RECT rcNormalPosition;
+    }
+}
+"@
+
+    # Add the type if it hasn't been added in this session yet
+    if (-not ([System.Management.Automation.PSTypeName]'WindowsAPI').Type) {
+        Add-Type -TypeDefinition $WinAPICode
+    }
+
+    # Find the target process matching your exact window title
+    $TargetProcess = Get-Process | Where-Object { $_.MainWindowTitle -eq 'Multi-Server Status Dashboard (Live Updates)' }
+
+    foreach ($proc in $TargetProcess) {
+        $hWnd = $proc.MainWindowHandle
+        if ($hWnd -eq [IntPtr]::Zero) { continue } # Skip if no window handle
+
+        # Initialize the placement structure
+        $placement = New-Object WindowsAPI+WINDOWPLACEMENT
+        $placement.length = [Marshal]::SizeOf($placement)
+
+        # Fetch the REAL state of the window from the OS
+        if ([WindowsAPI]::GetWindowPlacement($hWnd, [ref]$placement)) {
+        
+            # showCmd values: 1 = Normal/Restored, 2 = Minimized, 3 = Maximized
+            if ($placement.showCmd -eq 2) {
+                # Window is CURRENTLY MINIMIZED -> Restore it (9 = SW_RESTORE)
+                [WindowsAPI]::ShowWindowAsync($hWnd, 9) | Out-Null
+            } else {
+                # Window is CURRENTLY VISIBLE -> Minimize it (2 = SW_SHOWMINIMIZED)
+                [WindowsAPI]::ShowWindowAsync($hWnd, 2) | Out-Null
+            }
+        }
+    }
+}
+
+# Minimize InsurgencyServer-Win64-Shipping windows
+
+Add-MenuButton "Toggle Launcher" {
+
+    # Define the Windows API functions needed for true state detection
+    $WinAPICode = @"
+using System;
+using System.Runtime.InteropServices;
+
+public class WindowsAPI {
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+
+    public struct POINT {
+        public int X;
+        public int Y;
+    }
+
+    public struct RECT {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    public struct WINDOWPLACEMENT {
+        public int length;
+        public int flags;
+        public int showCmd;
+        public POINT ptMinPosition;
+        public POINT ptMaxPosition;
+        public RECT rcNormalPosition;
+    }
+}
+"@
+
+    # Add the type if it hasn't been added in this session yet
+    if (-not ([System.Management.Automation.PSTypeName]'WindowsAPI').Type) {
+        Add-Type -TypeDefinition $WinAPICode
+    }
+
+    # Find the target process matching your exact window title
+    $TargetProcess = Get-Process | Where-Object { $_.MainWindowTitle -eq 'Sandstorm_Multi_Server' }
+
+    foreach ($proc in $TargetProcess) {
+        $hWnd = $proc.MainWindowHandle
+        if ($hWnd -eq [IntPtr]::Zero) { continue } # Skip if no window handle
+
+        # Initialize the placement structure
+        $placement = New-Object WindowsAPI+WINDOWPLACEMENT
+        $placement.length = [Marshal]::SizeOf($placement)
+
+        # Fetch the REAL state of the window from the OS
+        if ([WindowsAPI]::GetWindowPlacement($hWnd, [ref]$placement)) {
+        
+            # showCmd values: 1 = Normal/Restored, 2 = Minimized, 3 = Maximized
+            if ($placement.showCmd -eq 2) {
+                # Window is CURRENTLY MINIMIZED -> Restore it (9 = SW_RESTORE)
+                [WindowsAPI]::ShowWindowAsync($hWnd, 9) | Out-Null
+            } else {
+                # Window is CURRENTLY VISIBLE -> Minimize it (2 = SW_SHOWMINIMIZED)
+                [WindowsAPI]::ShowWindowAsync($hWnd, 2) | Out-Null
+            }
+        }
+    }
+
+}
+
+if($closeServerWindows -eq 0)
+{
+    # Initialize the state tracking variable at the start of your script
+    $global:closeServerWindows = 0
+}
+else
+{
+    # Initialize the state tracking variable at the start of your script
+    $global:closeServerWindows = 1
+}
+
+Add-MenuButton "Toggle Server Logs" {
+    if ($global:closeServerWindows -eq 0)
+    {
+        $code = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
+        $type = Add-Type -MemberDefinition $code -Name "Win32ShowWindowAsync" -Namespace "Win32" -PassThru
+        Get-Process -Name "InsurgencyServer-Win64-Shipping" -ErrorAction SilentlyContinue | ForEach-Object {
+            $type::ShowWindowAsync($_.MainWindowHandle, 2)
+        }
+    }
+    else
+    {
+        $code = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
+        $type = Add-Type -MemberDefinition $code -Name "Win32ShowWindowAsync" -Namespace "Win32" -PassThru
+        Get-Process -Name "InsurgencyServer-Win64-Shipping" -ErrorAction SilentlyContinue | ForEach-Object {
+            $type::ShowWindowAsync($_.MainWindowHandle, 9)
+        }
+    }
+
+    $global:closeServerWindows = 1 - $global:closeServerWindows
+}.GetNewClosure()
+
+Add-MenuButton "Toggle Dashboard" {
+
+    # Define the Windows API functions needed for true state detection
+    $WinAPICode = @"
+using System;
+using System.Runtime.InteropServices;
+
+public class WindowsAPI {
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+
+    public struct POINT {
+        public int X;
+        public int Y;
+    }
+
+    public struct RECT {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    public struct WINDOWPLACEMENT {
+        public int length;
+        public int flags;
+        public int showCmd;
+        public POINT ptMinPosition;
+        public POINT ptMaxPosition;
+        public RECT rcNormalPosition;
+    }
+}
+"@
+
+    # Add the type if it hasn't been added in this session yet
+    if (-not ([System.Management.Automation.PSTypeName]'WindowsAPI').Type) {
+        Add-Type -TypeDefinition $WinAPICode
+    }
+
+    # Find the target process matching your exact window title
+    $TargetProcess = Get-Process | Where-Object { $_.MainWindowTitle -eq 'Multi-Server Status Dashboard (Live Updates)' }
+
+    foreach ($proc in $TargetProcess) {
+        $hWnd = $proc.MainWindowHandle
+        if ($hWnd -eq [IntPtr]::Zero) { continue } # Skip if no window handle
+
+        # Initialize the placement structure
+        $placement = New-Object WindowsAPI+WINDOWPLACEMENT
+        $placement.length = [Marshal]::SizeOf($placement)
+
+        # Fetch the REAL state of the window from the OS
+        if ([WindowsAPI]::GetWindowPlacement($hWnd, [ref]$placement)) {
+        
+            # showCmd values: 1 = Normal/Restored, 2 = Minimized, 3 = Maximized
+            if ($placement.showCmd -eq 2) {
+                # Window is CURRENTLY MINIMIZED -> Restore it (9 = SW_RESTORE)
+                [WindowsAPI]::ShowWindowAsync($hWnd, 9) | Out-Null
+            } else {
+                # Window is CURRENTLY VISIBLE -> Minimize it (2 = SW_SHOWMINIMIZED)
+                [WindowsAPI]::ShowWindowAsync($hWnd, 2) | Out-Null
+            }
+        }
+    }
+}
+
+Add-MenuBar
+
+# Open the Server Analytics
+
+Add-MenuButton "Server Analytics" {
+    Start-Process -FilePath "cmd.exe" -ArgumentList '/c Start_Server_Analytics.bat' -WindowStyle Hidden
+}.GetNewClosure()
+
+# Open the Rcon Dashboard
+
+Add-MenuButton "Rcon Dashboard" {
+    Start-Process -FilePath "cmd.exe" -ArgumentList '/c Start_Server_RconControlPanel.bat' -WindowStyle Hidden
+}.GetNewClosure()
+
+Add-MenuBar
+
+# Open the Server Manager
+
+# Lock the folder path to a clean string variable
+$targetDir = $thisScriptRoot
+
+# Build the absolute path to your batch file
+$batPath = Join-Path -Path $targetDir -ChildPath "Start_Server_Manager.bat"
+
+Add-MenuButton "Server Manager" {
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$batPath`"" -WorkingDirectory $targetDir -Verb RunAs
+}.GetNewClosure()
+
+# Open Windows Task Manager
+
+Add-MenuButton "Task Manager" {
+    taskmgr
+}.GetNewClosure()
+
+Add-MenuBar
 
 # Reboot Server List
 
@@ -927,6 +1227,58 @@ Add-MenuButton "Disable Server" {
 
                 $ServerListData.$serverName.Disabled = $isDisabled
                 $ServerListData | ConvertTo-Json | Set-Content -Path $ServerListJsonPath
+
+                Add-Type -AssemblyName System.Windows.Forms
+                Add-Type -AssemblyName System.Drawing
+                [System.Windows.Forms.Application]::EnableVisualStyles()
+
+                # Create the Form
+                $form = New-Object System.Windows.Forms.Form
+                $form.Text = "Disabling $serverName"
+                $form.Size = New-Object System.Drawing.Size(350,150)
+                $form.StartPosition = "CenterScreen"
+                $form.FormBorderStyle = "FixedDialog"
+                $form.MaximizeBox = $false
+                $form.MinimizeBox = $false
+                $form.TopMost = $true # Keeps it on top of other windows
+                $form.BackColor = [System.Drawing.Color]::FromArgb(248, 249, 250)
+
+                # Create the Text Label
+                $label = New-Object System.Windows.Forms.Label
+                $label.Location = New-Object System.Drawing.Point(20,30)
+                $label.Size = New-Object System.Drawing.Size(300,50)
+                $label.Font = New-Object System.Drawing.Font("Segoe UI", 9.5, [System.Drawing.FontStyle]::Bold)
+
+                $label.ForeColor = [System.Drawing.Color]::FromArgb(19, 115, 51)
+                $label.BackColor = [System.Drawing.Color]::FromArgb(230, 244, 234)
+                $label.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+                $label.FlatAppearance.BorderSize = 0
+                $label.TextAlign = [System.Drawing.ContentAlignment]::MiddleCenter
+                $form.Controls.Add($label)
+
+                # Setup Countdown Timer Variables
+                $script:countdown = 40
+                $label.Text = "Server disabling in less than $script:countdown seconds..."
+
+                # Create the Live Timer Object
+                $timer = New-Object System.Windows.Forms.Timer
+                $timer.Interval = 1000 # 1 second tick rate
+
+                $timer.Add_Tick({
+                    if ($script:countdown -gt 0) {
+                        $label.Text = "Server disabling in less than $script:countdown seconds..."
+                        $script:countdown--
+                    } else {
+                        $timer.Stop()
+                        $form.Close()
+                    }
+                })
+
+                # Start the timer when the window loads
+                $form.Add_Load({ $timer.Start() })
+
+                # Display the Form
+                [void]$form.ShowDialog()
             }
         }.GetNewClosure()
 
@@ -935,266 +1287,6 @@ Add-MenuButton "Disable Server" {
 
     show-Menu -ButtonList $ButtonList -windowTitle "Disable Server List"
 }
-
-# Minimize InsurgencyServer-Win64-Shipping windows
-
-if($closeServerWindows -eq 0)
-{
-    # Initialize the state tracking variable at the start of your script
-    $global:closeServerWindows = 0
-}
-else
-{
-    # Initialize the state tracking variable at the start of your script
-    $global:closeServerWindows = 1
-}
-
-Add-MenuButton "Toggle Server Windows" {
-    if ($global:closeServerWindows -eq 0)
-    {
-        $code = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
-        $type = Add-Type -MemberDefinition $code -Name "Win32ShowWindowAsync" -Namespace "Win32" -PassThru
-        Get-Process -Name "InsurgencyServer-Win64-Shipping" -ErrorAction SilentlyContinue | ForEach-Object {
-            $type::ShowWindowAsync($_.MainWindowHandle, 2)
-        }
-    }
-    else
-    {
-        $code = '[DllImport("user32.dll")] public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);'
-        $type = Add-Type -MemberDefinition $code -Name "Win32ShowWindowAsync" -Namespace "Win32" -PassThru
-        Get-Process -Name "InsurgencyServer-Win64-Shipping" -ErrorAction SilentlyContinue | ForEach-Object {
-            $type::ShowWindowAsync($_.MainWindowHandle, 9)
-        }
-    }
-
-    $global:closeServerWindows = 1 - $global:closeServerWindows
-}.GetNewClosure()
-
-# Minimize all Windows
-
-if($closeAllWindows -ne 0)
-{
-    # Define the Windows API functions needed for true state detection
-    $WinAPICode = @"
-using System;
-using System.Runtime.InteropServices;
-
-public class WindowsAPI {
-    [DllImport("user32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
-
-    public struct POINT {
-        public int X;
-        public int Y;
-    }
-
-    public struct RECT {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-
-    public struct WINDOWPLACEMENT {
-        public int length;
-        public int flags;
-        public int showCmd;
-        public POINT ptMinPosition;
-        public POINT ptMaxPosition;
-        public RECT rcNormalPosition;
-    }
-}
-"@
-
-    # Add the type if it hasn't been added in this session yet
-    if (-not ([System.Management.Automation.PSTypeName]'WindowsAPI').Type) {
-        Add-Type -TypeDefinition $WinAPICode
-    }
-
-    # Find the target process matching your exact window title
-    $TargetProcess = Get-Process | Where-Object { $_.MainWindowTitle -eq 'Sandstorm_Multi_Server' }
-
-    foreach ($proc in $TargetProcess) {
-        $hWnd = $proc.MainWindowHandle
-        if ($hWnd -eq [IntPtr]::Zero) { continue } # Skip if no window handle
-
-        # Initialize the placement structure
-        $placement = New-Object WindowsAPI+WINDOWPLACEMENT
-        $placement.length = [Marshal]::SizeOf($placement)
-
-        # Fetch the REAL state of the window from the OS
-        if ([WindowsAPI]::GetWindowPlacement($hWnd, [ref]$placement)) {
-        
-            # showCmd values: 1 = Normal/Restored, 2 = Minimized, 3 = Maximized
-            if ($placement.showCmd -eq 2) {
-                # Window is CURRENTLY MINIMIZED -> Restore it (9 = SW_RESTORE)
-                [WindowsAPI]::ShowWindowAsync($hWnd, 9) | Out-Null
-            } else {
-                # Window is CURRENTLY VISIBLE -> Minimize it (2 = SW_SHOWMINIMIZED)
-                [WindowsAPI]::ShowWindowAsync($hWnd, 2) | Out-Null
-            }
-        }
-    }
-
-    Start-Sleep -Milliseconds 100
-
-    # Find the target process matching your exact window title
-    $TargetProcess = Get-Process | Where-Object { $_.MainWindowTitle -eq 'Multi-Server Status Dashboard (Live Updates)' }
-
-    foreach ($proc in $TargetProcess) {
-        $hWnd = $proc.MainWindowHandle
-        if ($hWnd -eq [IntPtr]::Zero) { continue } # Skip if no window handle
-
-        # Initialize the placement structure
-        $placement = New-Object WindowsAPI+WINDOWPLACEMENT
-        $placement.length = [Marshal]::SizeOf($placement)
-
-        # Fetch the REAL state of the window from the OS
-        if ([WindowsAPI]::GetWindowPlacement($hWnd, [ref]$placement)) {
-        
-            # showCmd values: 1 = Normal/Restored, 2 = Minimized, 3 = Maximized
-            if ($placement.showCmd -eq 2) {
-                # Window is CURRENTLY MINIMIZED -> Restore it (9 = SW_RESTORE)
-                [WindowsAPI]::ShowWindowAsync($hWnd, 9) | Out-Null
-            } else {
-                # Window is CURRENTLY VISIBLE -> Minimize it (2 = SW_SHOWMINIMIZED)
-                [WindowsAPI]::ShowWindowAsync($hWnd, 2) | Out-Null
-            }
-        }
-    }
-}
-
-Add-MenuButton "Toggle Info Windows" {
-
-    # Define the Windows API functions needed for true state detection
-    $WinAPICode = @"
-using System;
-using System.Runtime.InteropServices;
-
-public class WindowsAPI {
-    [DllImport("user32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    public static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
-
-    public struct POINT {
-        public int X;
-        public int Y;
-    }
-
-    public struct RECT {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-
-    public struct WINDOWPLACEMENT {
-        public int length;
-        public int flags;
-        public int showCmd;
-        public POINT ptMinPosition;
-        public POINT ptMaxPosition;
-        public RECT rcNormalPosition;
-    }
-}
-"@
-
-    # Add the type if it hasn't been added in this session yet
-    if (-not ([System.Management.Automation.PSTypeName]'WindowsAPI').Type) {
-        Add-Type -TypeDefinition $WinAPICode
-    }
-
-    # Find the target process matching your exact window title
-    $TargetProcess = Get-Process | Where-Object { $_.MainWindowTitle -eq 'Sandstorm_Multi_Server' }
-
-    foreach ($proc in $TargetProcess) {
-        $hWnd = $proc.MainWindowHandle
-        if ($hWnd -eq [IntPtr]::Zero) { continue } # Skip if no window handle
-
-        # Initialize the placement structure
-        $placement = New-Object WindowsAPI+WINDOWPLACEMENT
-        $placement.length = [Marshal]::SizeOf($placement)
-
-        # Fetch the REAL state of the window from the OS
-        if ([WindowsAPI]::GetWindowPlacement($hWnd, [ref]$placement)) {
-        
-            # showCmd values: 1 = Normal/Restored, 2 = Minimized, 3 = Maximized
-            if ($placement.showCmd -eq 2) {
-                # Window is CURRENTLY MINIMIZED -> Restore it (9 = SW_RESTORE)
-                [WindowsAPI]::ShowWindowAsync($hWnd, 9) | Out-Null
-            } else {
-                # Window is CURRENTLY VISIBLE -> Minimize it (2 = SW_SHOWMINIMIZED)
-                [WindowsAPI]::ShowWindowAsync($hWnd, 2) | Out-Null
-            }
-        }
-    }
-
-    Start-Sleep -Milliseconds 100
-
-    # Find the target process matching your exact window title
-    $TargetProcess = Get-Process | Where-Object { $_.MainWindowTitle -eq 'Multi-Server Status Dashboard (Live Updates)' }
-
-    foreach ($proc in $TargetProcess) {
-        $hWnd = $proc.MainWindowHandle
-        if ($hWnd -eq [IntPtr]::Zero) { continue } # Skip if no window handle
-
-        # Initialize the placement structure
-        $placement = New-Object WindowsAPI+WINDOWPLACEMENT
-        $placement.length = [Marshal]::SizeOf($placement)
-
-        # Fetch the REAL state of the window from the OS
-        if ([WindowsAPI]::GetWindowPlacement($hWnd, [ref]$placement)) {
-        
-            # showCmd values: 1 = Normal/Restored, 2 = Minimized, 3 = Maximized
-            if ($placement.showCmd -eq 2) {
-                # Window is CURRENTLY MINIMIZED -> Restore it (9 = SW_RESTORE)
-                [WindowsAPI]::ShowWindowAsync($hWnd, 9) | Out-Null
-            } else {
-                # Window is CURRENTLY VISIBLE -> Minimize it (2 = SW_SHOWMINIMIZED)
-                [WindowsAPI]::ShowWindowAsync($hWnd, 2) | Out-Null
-            }
-        }
-    }
-}
-
-# Open the Server Analytics
-
-Add-MenuButton "Server Analytics" {
-    Start-Process -FilePath "cmd.exe" -ArgumentList '/c Start_Server_Analytics.bat' -WindowStyle Hidden
-}.GetNewClosure()
-
-# Open the Rcon Dashboard
-
-Add-MenuButton "Rcon Dashboard" {
-    Start-Process -FilePath "cmd.exe" -ArgumentList '/c Start_Server_RconControlPanel.bat' -WindowStyle Hidden
-}.GetNewClosure()
-
-# Open the Server Manager
-
-# Lock the folder path to a clean string variable
-$targetDir = $thisScriptRoot
-
-# Build the absolute path to your batch file
-$batPath = Join-Path -Path $targetDir -ChildPath "Start_Server_Manager.bat"
-
-Add-MenuButton "Server Manager" {
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$batPath`"" -WorkingDirectory $targetDir -Verb RunAs
-}.GetNewClosure()
-
-# Open Windows Task Manager
-
-Add-MenuButton "Task Manager" {
-    taskmgr
-}.GetNewClosure()
 
 # Stop all game servers and powershell processes
 
