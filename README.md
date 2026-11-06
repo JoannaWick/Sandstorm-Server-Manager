@@ -1,7 +1,7 @@
 # Sandstorm Server Manager
 ## Created for Insurgency Sandstorm 1.21+ by Joanna Wick
-### Version: 2.0.1
-### Date: 2026-10-31
+### Version: 2.1.0
+### Date: 2026-11-05
 
 This package can Install/Add one or more Insurgency Sandstorm Server without the need to use Virtual Machines. It will keep mods updated, monitor players and restart downed servers automatically.
 
@@ -101,6 +101,28 @@ Provide step-by-step instructions on how to install and run your distribution.
 
 Change Log
 ==========
+2.1.0 (2026-11-05)
+
+    1. [ADDED] Sandstorm Taskbar: A countdown timer for Disabling Server similar to the one used for rebooting.
+    2. [ADDED] Version.json that contains version and release date so I don't have to go hunting in the program files to change it.
+    3. [ADDED] Game.ini: Added configurations for Team Deathmatch, Mission, Occupy, Domination, Survival, Firefight, Ambush, Defusal and Outpost
+    4. [ADDED] Game.ini: Added more descriptions for the different configuration settings.
+    5. [ADDED] When Server Reboot Countdown reaches 0 all active players are added to the Player Logs for the Server Analytics.  Information about players active was lost when the servers performed a Scheduled Reboot.
+    6. [CHANGED] Sandstorm Launcher: No longer counts Server Info Monitor Dashboard as a window in windows size and position calculations.
+    7. [CHANGED] Sandstorm Launcher: user.json copied to storage and backup is made only when user.json is updated by game executable.  No longer creates a backup every time the server launches.
+    8. [CHANGED] Server Info Monitor: Is now a fixed size centered on the screen to accomodate more than 4 servers.  The previous mode with more than 4 servers the text became too small to read.
+    9. [CHANGED] Server Manager: Info Windows changed to Dashboard Window and Server Windows changed to Server Logs
+    10. [CHANGED] Sandstorm Taskbar: Separated Toggle Info Windows into two buttons called Toggle Monitor and Toggle Dashboard.
+    11. [CHANGED] Sandstorm Taskbar: Server Monitor window doesn't minimize automatically anymore.
+    12. [CHANGED] Sandstorm Taskbar: Toggle Server Windows button changed to Toggle Server Logs.
+    13. [CHANGED] Sandstorm Taskbar: Reordered buttons and grouped them based upon what they do with Spacer Bars between the groups.
+    14. [CHANGED] Sandstorm Analytics: Clicking the X in the Player Search will now restore the Top Lists for all severs.
+    15. [FIXED] Sandstorm Info Monitor: Added a buffer check to reset stream pointers if lengths do not match.  Monitor has still been missing logouts in the stream leaving players shown still on a server.  The Analytics records them properly while the Monitor sometimes failed to remove them.  Hopefully this fix will be the one that works.
+    16. [DELETED] Server_Manager-Deprecated.ps1 from archive
+    17. [DELETED] Work files that were mistakenly included in archive.
+    18. [REMOVED] Sandstorm Info Monitor: Rcon no longer used to check for logins and log outs.  It is now only used for retrieving IP Addresses and Scores for each player.
+    19. [REMOVED] Sandstorm Analytics: Auto Search removed when entering texts.  Could be slow in searching for matches of 1 or 2 characters in a large database. Search button will need to be pressed to perform search.
+
 2.0.1 (2026-10-31)
 
     1. [FIXED] Server Launcher: Boot Loop issue when creating a new or importing a server.
@@ -149,8 +171,5 @@ Change Log
 
 To Do
 =====
-
-    1. Add toggle to disable mod updates when server launches
-    2. Server Dashboard will sometimes miss a player leaving and not remove them from the player list
 
        
