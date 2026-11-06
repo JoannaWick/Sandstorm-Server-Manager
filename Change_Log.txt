@@ -1,0 +1,72 @@
+Change Log
+==========
+
+2.1.0 (2026-11-05)
+
+    1. [ADDED] Sandstorm Taskbar: A countdown timer for Disabling Server similar to the one used for rebooting.
+    2. [ADDED] Version.json that contains version and release date so I don't have to go hunting in the program files to change it.
+    3. [ADDED] Game.ini: Added configurations for Team Deathmatch, Mission, Occupy, Domination, Survival, Firefight, Ambush, Defusal and Outpost
+    4. [ADDED] Game.ini: Added more descriptions for the different configuration settings.
+    5. [ADDED] When Server Reboot Countdown reaches 0 all active players are added to the Player Logs for the Server Analytics.  Information about players active was lost when the servers performed a Scheduled Reboot.
+    6. [CHANGED] Sandstorm Launcher: No longer counts Server Info Monitor Dashboard as a window in windows size and position calculations.
+    7. [CHANGED] Sandstorm Launcher: user.json copied to storage and backup is made only when user.json is updated by game executable.  No longer creates a backup every time the server launches.
+    8. [CHANGED] Server Info Monitor: Is now a fixed size centered on the screen to accomodate more than 4 servers.  The previous mode with more than 4 servers the text became too small to read.
+    9. [CHANGED] Server Manager: Info Windows changed to Dashboard Window and Server Windows changed to Server Logs
+    10. [CHANGED] Sandstorm Taskbar: Separated Toggle Info Windows into two buttons called Toggle Monitor and Toggle Dashboard.
+    11. [CHANGED] Sandstorm Taskbar: Server Monitor window doesn't minimize automatically anymore.
+    12. [CHANGED] Sandstorm Taskbar: Toggle Server Windows button changed to Toggle Server Logs.
+    13. [CHANGED] Sandstorm Taskbar: Reordered buttons and grouped them based upon what they do with Spacer Bars between the groups.
+    14. [CHANGED] Sandstorm Analytics: Clicking the X in the Player Search will now restore the Top Lists for all severs.
+    15. [FIXED] Sandstorm Info Monitor: Added a buffer check to reset stream pointers if lengths do not match.  Monitor has still been missing logouts in the stream leaving players shown still on a server.  The Analytics records them properly while the Monitor sometimes failed to remove them.  Hopefully this fix will be the one that works.
+    16. [DELETED] Server_Manager-Deprecated.ps1 from archive
+    17. [DELETED] Work files that were mistakenly included in archive.
+    18. [REMOVED] Sandstorm Info Monitor: Rcon no longer used to check for logins and log outs.  It is now only used for retrieving IP Addresses and Scores for each player.
+    19. [REMOVED] Sandstorm Analytics: Auto Search removed when entering texts.  Could be slow in searching for matches of 1 or 2 characters in a large database. Search button will need to be pressed to perform search.
+
+2.0.1 (2026-10-31)
+
+    1. [FIXED] Server Launcher: Boot Loop issue when creating a new or importing a server.
+    2. [FIXED] All servers will be stopped when importing or creating a new server to prevent issues with the other servers.
+
+2.0.0 (2026-10-29)
+
+    1. [CHANGED] Complete rewrite of the Server_Manager.ps1 to accommodate using a GUI interface.
+    2. [CHANGED] .bat files have pauses removed except for the Admin Mode Required message.  Users were clickin on the X close button on the window instead of pressing enter and aborting the rest of the install checks for first run.
+    3. [CHANGED] Server Launcher: Upped boot Wait Time from 30 to 35 seconds.  Servers would sometimes do purges and compaction on launch causing there to a much longer delay before the server fully booted.  This could cause the user.json to not be stored properly if updated.
+    4. [FIXED] Server Manager: When editing GameStatsToken it would not save.  The Token did save on Install or Import but changing it later would not save.
+    5. [FIXED] Server Manager: Window Title for the Map Cycle Editor claimed it was the Boot Maps Editor.
+    6. [FIXED] startSandstormServer.bat: Deleting the contents of the bootmaps.txt will now cause the server to boot with the startscenario map in the ServerStartup.json instead of a random map.  You can edit the ServerStartup.json for each server manually to set the map.  Do not delete the bootmaps.txt file.
+    7. [FIXED] Server Launcher: All .check files are deleted when the server completely finishes booting.  Do not close any server window while servers are booting.  This can cause .check files to stick around causing a server to boot more than once.  Let all servers finish booting. 
+    8. [FIXED] Logic error in building Allmods list for Unsubscribe/Delete.  It was allowing the deletion of mods used by other servers.
+    9. [FIXED] Server Launcher: If more than one server ServerStartup.json could be corrupted if there was an exceedinglt long boot time for a server.
+   10. [FIXED] Server Launcher: user.json backups were not being created and naming convention was changed for more clarity
+   11. [FIXED] Server Info Monitor: Log out times were using current time instead of the calculated localtime from the logs.  This would give wildly large online times when the logs were scanned and put into the database an very rare occassions.
+   12. [FIXED] Server Info Monitor: Login Match phrase was incorrect so scanning the log stream would miss mod logins and would rely on the back Rcon login detection.  This would miss players logging in if the server had more than 50 bots.
+   13. [FIXED] Server Info Monitor: When a player entry was updated instead of inserted in the PlayerLogs it would be deleted because of a malformed _ID.  So players would be removed from the logs and never show on the Analytics.  This would occur on all still running servers if only one server was rebooted.
+
+1.1.1 (2026-10-25)
+
+    1. [REMOVED]  Removed the Network Activity GUI as there were too many issues with Windows 11 systems.
+    2. [FIXED] Server Manager: When editing GameStatsToken it would not save.  The Token did save on Install or Import but changing it later would not save.
+    3. [DEPRECATED] Version 1 of the Sandstorm Server manager will no longer be updated.  Please update to Version 2 when released.
+
+1.1.0 (2026-10-20)
+
+    1. [CHANGED] Mod Updater: The Download Progress Code has been re-written.  Some people were experiencing red errors being displayed slowing down downloads.  This should fix those errors.
+    2. [ADDED] Mod Updater: When mod has been unsubscribed it will delete the mod if none of the other servers are subscribed freeing drive space.
+    3. [FIXED] Mod Updater: If multiple servers were subscribed to the same mod only one will download and install it to the UnifideMods directory.
+    4. [ADDED] Taskbar: Disable Server Button will kill a currently running server and then set it to Disabled so it will not start next reboot.
+    5. [ADDED] When updating with a new version of Server Manager the startSandstormServer.bat will be copied to the Insurgency\steamapps\common\sandstorm_server directory overwriting the older version if new.  Updating to the latest version is easy.  Just copy the Sandstorm_Server_Manager to the existing directory overwritting everything in there.  None of the server configurations or mods will be changed.
+    6. [CHANGED] Info Monitor: Moved Log Stream Parsing after Rcon processing to try and prevent players that have logged out from staying in the Server Dashboard display.
+    7. [ADDED] Server Launcher: If a server reboots more than 4 times without being successful the server will be DISABLED to prevent further boot looping until the admin can investigate
+    8. [ADDED] Server Launcher: Added check for "Warning: OSS: Async task 'FOnlineAsyncTaskSteamCreateServer bWasSuccessful: 0' failed" which signals server boot failure if in the last 20 lines of the log.
+    9. [CHANGED] Server Launcher: Changed check for running servers to determine if not running then launch server.
+    10. [CHANGED] Info Monitor: Changed the loop structure used by the Info Monitor to scan through server logs for player connects and disconnects.  The old method could drop lines from the stream.
+    
+1.0.0 (2026-10-16)
+
+    1. Initial Release 
+    
+
+To Do
+=====
